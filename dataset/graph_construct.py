@@ -7,12 +7,6 @@ mongo_client = MongoClient('mongodb://localhost:27017/')
 db = mongo_client['GFI-TEST1']
 # repo_issues = db['repo_issue']
 
-# 获取所有PR的编号，区分开启和关闭
-# open_prs = set()
-# for pr in repo_issues.find({"is_pull": True}, {"number": 1, "state": 1}):
-#     if pr['state'] == 'open':
-#         open_prs.add(pr['number'])
-
 # 连接到 Neo4j
 graph = Graph("bolt://localhost:7687", auth=("neo4j", ""))
 
