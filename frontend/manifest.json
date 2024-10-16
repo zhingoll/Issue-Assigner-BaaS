@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Issue Resolver Assistant",
+  "version": "1.0",
+  "description": "在 GitHub Issue 页面显示可能的解决者。",
+  "icons": {
+    "48": "icons/icon48.png"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://github.com/*",
+    "http://localhost:8000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/*/issues/*"],
+      "js": ["content_script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_icon": "icons/icon48.png",
+    "default_title": "Issue Resolver Assistant"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
