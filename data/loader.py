@@ -7,7 +7,8 @@ class MongoLoader:
     self.mongo_client = MongoClient(uri)
     self.db = self.mongo_client[db_name]
 
-  def to_df(self,query:dict,collection_name:str,filter:list[str]) -> DataFrame:
+  def to_df(self,owner:str,name:str,collection_name:str,filter:list[str]) -> DataFrame:
+      query = {"owner": owner, "name": name}
       contents = list(self.db[collection_name].find(query))
       contents_df = pd.DataFrame(contents)
       contents_df = contents_df[filter]
