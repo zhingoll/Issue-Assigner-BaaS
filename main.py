@@ -21,12 +21,15 @@ def get_load_model_decision():
     load = input('Do you want to load:')
     return load.lower() == "load"
 
+def print_divider(title, width):
+    print("\n" + "=" * width)
+    print(f"{title.center(width)}")
+    print("=" * width)
+
 if __name__ == '__main__':
     available_models = list(ModelRegistry.registry.keys())
-
-    print('='*88)
-    print("Issue-Assign Tool")
-    print('='*88)
+    title = "Issue-Assign Tool"
+    print_divider(title,88)
     print("The existing model is as follows:")
     print('  '.join(available_models))
     print('='*88)
