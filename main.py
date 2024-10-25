@@ -35,4 +35,4 @@ if __name__ == '__main__':
     config = load_configuration(model_name)
     load_model = get_load_model_decision()
     model = IssueAssign(config)
-    model.execute(load_model)
+    model.run(load_model)
