@@ -10,6 +10,7 @@ def clean_text(text:str) -> str:
     '''
     清理文本数据 -> 得到干净的文本
     '''
+    text = str(text)
     # 全小写
     text = text.lower()
     # 将markdown格式转换成HTML格式
