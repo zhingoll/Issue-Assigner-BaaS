@@ -18,7 +18,11 @@ def clean_text(text:str) -> str:
     url_pattern_my = re.compile(r"(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]")
     text = url_pattern_my.sub(" ", text)
     # 将HTML转换成字符串
-    text = etree.HTML(text=text).xpath('string(.)')
+    html_tree = etree.HTML(text)
+    if html_tree is not None:
+        text = html_tree.xpath('string(.)')
+    else:
+        text = ""  # 如果转换失败，返回空字符串
     # 去除数字、字母、空白符以外的所有字符（例如表情）
     text = re.sub(r"[^\w\s]|\_", " ", text)
     # 提取词干
