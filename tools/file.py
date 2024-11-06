@@ -1,6 +1,9 @@
 from re import split
 
 class FileIO():
+    '''
+    主要针对 "userid \t itemid \t rate" 这种类型的数据集
+    '''
     @staticmethod
     def read_interact_file(file: str):
         interact_data = []
