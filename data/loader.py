@@ -1,13 +1,15 @@
 from pymongo import MongoClient
 import pandas as pd
 from pandas import DataFrame
-import torch
+from torch_geometric.transforms import RandomLinkSplit
+from torch_geometric.loader import LinkNeighborLoader
+
 class MongoLoader:
   def __init__(self,uri:str,db_name:str) -> None:
     self.mongo_client = MongoClient(uri)
     self.db = self.mongo_client[db_name]
 
-  def to_df(self,owner:str,name:str,collection_name:str,filter:list[str]) -> DataFrame:
+  def to_df(self,owner:str,name:str,collection_name:str,filter) -> DataFrame:
       query = {"owner": owner, "name": name}
       contents = list(self.db[collection_name].find(query))
       contents_df = pd.DataFrame(contents)
@@ -16,43 +18,60 @@ class MongoLoader:
   
 
 
-def load_node_csv(path,index_col,encoders=None,cleaners=None,**kwargs):
-    df = pd.read_csv(path, index_col=index_col, **kwargs)
-    '''
-    Refer to the implementation of pytorch-geometric:
-    https://pytorch-geometric.readthedocs.io/en/stable/tutorial/load_csv.html
-    '''
-    node_mapping = {index: i for i, index in enumerate(df.index.unique())}  
+# 将数据划分为训练集、验证集和测试集
+# 使用 RandomLinkSplit 划分 'resolve' 边
+def split_dataset(data):
+    print("将数据划分为训练集、验证集------------------------------------------")
+    dataset_split = RandomLinkSplit(
+        num_val=0.1,
+        num_test=0, # 测试集单独提供
+        is_undirected=True,
+        add_negative_train_samples=True,
+        edge_types=[('issue', 'resolved_by', 'user')],
+        rev_edge_types=[('user', 'rev_resolved_by', 'issue')]
+    )
+    train_data, val_data, _ = dataset_split(data)
+    return train_data, val_data
 
-    if cleaners is not None:
-        for col, cleaner in cleaners.items():
-            # 处理缺失值
-            df[col] = df[col].fillna('')
-            df[col] = df[col].apply(cleaner)
-    x_vec = None
+def dataset_to_batch(train_data,val_data,batch_size):
+      # 创建数据加载器
+    num_neighbors=[10, 10] # 每层采样的邻居数，可以根据需要调整
+    print("train_loader ---------------------------------")
+    train_loader = LinkNeighborLoader(
+        train_data,
+        num_neighbors=num_neighbors, 
+        edge_label_index=(('issue', 'resolved_by', 'user'),
+        train_data['issue', 'resolved_by', 'user'].edge_label_index
+        ),
+        edge_label=train_data['issue', 'resolved_by', 'user'].edge_label,
+        batch_size=batch_size,
+        shuffle=True
+    )
+    print("val_loader ---------------------------------")
+    val_loader = LinkNeighborLoader(
+        val_data,
+        num_neighbors=num_neighbors,
+        edge_label_index=(('issue', 'resolved_by', 'user'),
+        val_data['issue', 'resolved_by', 'user'].edge_label_index
+        ),
+        edge_label=val_data['issue', 'resolved_by', 'user'].edge_label,
+        batch_size=batch_size,
+        shuffle=False
+    )
+    # print("test_loader ---------------------------------")
+    # self.test_loader = LinkNeighborLoader(
+    # self.test_data,
+    # num_neighbors=num_neighbors,
+    # edge_label_index=(('issue', 'resolved_by', 'user'),
+    # self.test_data['issue', 'resolved_by', 'user'].edge_label_index
+    # ),
+    # edge_label=self.test_data['issue', 'resolved_by', 'user'].edge_label,
+    # batch_size=batch_size,
+    # shuffle=False
+    # ) 
+    return train_loader,val_loader
+  
 
-    if encoders is not None:
-        x_vec = [torch.tensor(encoder(df[col]).toarray(),dtype=torch.float) for col, encoder in encoders.items()]
-        x_vec = torch.cat(x_vec, dim=-1)
 
-    return x_vec, node_mapping
-
-def load_edge_csv(path, src_index_col, src_mapping, dst_index_col, dst_mapping,
-                  encoders=None, **kwargs):
-    '''
-    Refer to the implementation of pytorch-geometric:
-    https://pytorch-geometric.readthedocs.io/en/stable/tutorial/load_csv.html
-    '''
-    df = pd.read_csv(path, **kwargs)
-    src = [src_mapping[index] for index in df[src_index_col]]
-    dst = [dst_mapping[index] for index in df[dst_index_col]]
-    edge_index = torch.tensor([src, dst])
-
-    edge_attr = None
-    if encoders is not None:
-        edge_attrs = [encoder(df[col]) for col, encoder in encoders.items()]
-        edge_attr = torch.cat(edge_attrs, dim=-1)
-
-    return edge_index, edge_attr  
 
 
