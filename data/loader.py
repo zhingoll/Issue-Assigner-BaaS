@@ -1,22 +1,5 @@
-from pymongo import MongoClient
-import pandas as pd
-from pandas import DataFrame
 from torch_geometric.transforms import RandomLinkSplit
 from torch_geometric.loader import LinkNeighborLoader
-
-class MongoLoader:
-  def __init__(self,uri:str,db_name:str) -> None:
-    self.mongo_client = MongoClient(uri)
-    self.db = self.mongo_client[db_name]
-
-  def to_df(self,owner:str,name:str,collection_name:str,filter) -> DataFrame:
-      query = {"owner": owner, "name": name}
-      contents = list(self.db[collection_name].find(query))
-      contents_df = pd.DataFrame(contents)
-      contents_df = contents_df[filter]
-      return contents_df
-  
-
 
 # 将数据划分为训练集、验证集和测试集
 # 使用 RandomLinkSplit 划分 'resolve' 边
