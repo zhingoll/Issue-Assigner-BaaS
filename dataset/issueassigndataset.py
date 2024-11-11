@@ -5,17 +5,18 @@ from torch_geometric.data import InMemoryDataset, HeteroData
 from sklearn.feature_extraction.text import TfidfVectorizer
 from torch_geometric.transforms import ToUndirected
 from tools.nlp import clean_text
-import re
+import torch.nn as nn
 
 class IssueAssignDataset(InMemoryDataset):
-    def __init__(self, root, transform=None, pre_transform=None):
-        super(IssueAssignDataset, self).__init__(root, transform, pre_transform)
+    def __init__(self, root,transform=None, pre_transform=None):
+        super(IssueAssignDataset, self).__init__(root,transform, pre_transform)
         self.load(self.processed_paths[0])
+        
 
     @property
     def raw_file_names(self):
         # 返回需要处理的原始文件列表
-        return ['issue_content.csv', 'user_issue.csv','resolved_issues.csv']
+        return ['issue_content.csv', 'user_issue.csv','resolved_issues.csv','opened_issues.csv']
 
     @property
     def processed_file_names(self):
@@ -30,11 +31,13 @@ class IssueAssignDataset(InMemoryDataset):
         issue_content_path = os.path.join(self.raw_dir, 'issue_content.csv')
         user_issue_path = os.path.join(self.raw_dir, 'user_issue.csv')
         resolved_issues_path = os.path.join(self.raw_dir, 'resolved_issues.csv')
-        
+        # 测试集所使用的数据
+        opened_issues_path = os.path.join(self.raw_dir, 'opened_issues.csv')
+        dim = 64
 
         # 准备文本特征提取器
-        title_vectorizer = TfidfVectorizer(max_features=128)
-        body_vectorizer = TfidfVectorizer(max_features=128)
+        title_vectorizer = TfidfVectorizer(max_features=(dim//2))
+        body_vectorizer = TfidfVectorizer(max_features=(dim//2))
 
         # 加载 issue 节点数据
         issue_x, issue_mapping = self.get_node_mapping(
@@ -49,9 +52,62 @@ class IssueAssignDataset(InMemoryDataset):
             }
         )
 
+    # 加载未解决的 Issue 数据
+        opened_issues_df = pd.read_csv(opened_issues_path)
+
+        open_issue_x, open_issue_mapping = self.get_node_mapping(
+            opened_issues_path, 'number',
+            encoders={
+                'title': lambda x: title_vectorizer.transform(x).toarray(),
+                'body': lambda x: body_vectorizer.transform(x).toarray()
+            },
+            cleaners={
+                'title': clean_text,
+                'body': clean_text
+            }
+        )
+
+        # 合并 issue_mapping和issue_x
+        for number, idx in open_issue_mapping.items():
+            if number not in issue_mapping:
+                issue_mapping[number] = len(issue_mapping)
+                issue_x = torch.cat([issue_x, open_issue_x[idx].unsqueeze(0)], dim=0)
+            else:
+                # 如果 issue 已存在，跳过或更新特征
+                pass
+
+
         # 加载 user 节点数据,目前没结合用户信息
         _, user_mapping = self.get_node_mapping(user_issue_path, 'UserName')
-       
+        
+        
+        # 更新 user_mapping
+        for opener in opened_issues_df['user']:
+            if opener not in user_mapping:
+                user_mapping[opener] = len(user_mapping)
+
+        # 更新user_embedding
+        user_embedding = nn.Embedding(len(user_mapping),dim)
+
+        # 标记 open_issues
+        is_open_issue = torch.zeros(len(issue_mapping), dtype=torch.bool)
+        for number in opened_issues_df['number']:
+            idx = issue_mapping[number]
+            is_open_issue[idx] = True
+        
+
+        # 添加 'user', 'open', 'issue' 边
+        opener_indices = []
+        issue_indices = []
+        for _, row in opened_issues_df.iterrows():
+            opener = row['user']
+            issue_number = row['number']
+            opener_idx = user_mapping[opener]
+            issue_idx = issue_mapping[issue_number]
+            opener_indices.append(opener_idx)
+            issue_indices.append(issue_idx)
+        open_edge_index = torch.tensor([opener_indices, issue_indices], dtype=torch.long)
+        
 
         # # 定义边的权重,参考OpenRank(https://dl.acm.org/doi/10.1145/3639477.3639734)
         # weight_mapping = {
@@ -90,8 +146,11 @@ class IssueAssignDataset(InMemoryDataset):
         data = HeteroData()
         data['user'].num_nodes = len(user_mapping)
         data['issue'].x = issue_x
+        data['user'].x = user_embedding.weight
         data['user', 'participate', 'issue'].edge_index = edge_index
         data['user', 'participate', 'issue'].edge_weight = edge_weight
+        data['issue'].is_open_issue = is_open_issue
+        data['user'].num_nodes = len(user_mapping)
         # 添加正样本的边（user-resolve-issue）
         # 是否需要提前将正样本对应的索引从训练集中删除？
         # 可以分成两种情况讨论：
@@ -102,7 +161,8 @@ class IssueAssignDataset(InMemoryDataset):
         data['issue', 'resolved_by', 'user'].edge_index = pos_edge_index
         # pos_edge_label = torch.ones(pos_edge_index.size(1), device=pos_edge_index.device)
         # data['issue', 'resolved_by', 'user'].edge_label = pos_edge_label
-
+        # 添加需要测试时预测的边
+        data['user', 'open', 'issue'].edge_index = open_edge_index
         #根据需要从参与边中移除解决边
         self.remove_positive_edges_from_participate(data)
         #将图转换为无向图
@@ -233,9 +293,9 @@ class IssueAssignDataset(InMemoryDataset):
 
 def dataset_to_graph(dataset_name):
     print("load nodes and egdes from csv...")
-    dataset = IssueAssignDataset(os.path.abspath(os.path.join('dataset',dataset_name)))   
+    dataset = IssueAssignDataset(os.path.abspath(os.path.join('dataset',dataset_name)))
     data = dataset[0]
-    # user_mapping, issue_mapping = torch.load(os.path.join(dataset.processed_dir,'mappings.pt'))
-    num_users = data['user'].num_nodes
-    num_issues = data['issue'].num_nodes
-    return data,num_users,num_issues
+    user_mapping, issue_mapping = torch.load(os.path.join(dataset.processed_dir,'mappings.pt'))
+    # num_users = data['user'].num_nodes
+    # num_issues = data['issue'].num_nodes
+    return data,user_mapping, issue_mapping

@@ -1,20 +1,21 @@
 from tools.log import Log
 from time import strftime, localtime, time
-
+from data.mongo import MyMongoLoader
+from dataset.issueassigndataset import dataset_to_graph
+from data.loader import split_dataset,dataset_to_batch
 class GraphBaseModel:
-  def __init__(self,config,train_data,validate_data,test_data) -> None:
+  def __init__(self,config) -> None:
     print("GraphBaseModel has been Initialized")
-    self.model_config = config
-    self.train_data = train_data
-    self.validate_data = validate_data
-    self.test_data = test_data
-    self.model_name = self.model_config['model_name']
-    self.topk = self.model_config['topk']
-    self.epoch = self.model_config['epoch']
-    self.batch_size = self.model_config['batch_size']
-    self.learningRate = self.model_config['learningRate']
-    self.hyperparameter = self.model_config['hyperparameter']
-    self.output = self.model_config['output']
+    self.config = config
+    self.model_name = self.config['model_name']
+    self.topk = self.config['topk']
+    self.epoch = int(self.config['epoch'])
+    self.batch_size = int(self.config['batch_size'])
+    self.learningRate = float(self.config['learningRate'])
+    self.hyperparameter = self.config['hyperparameter']
+    self.output = self.config['output']
+    self.owner = self.config['owner']
+    self.name = self.config['name']
     current_time = strftime("%Y-%m-%d-%H-%M-%S", localtime(time()))
     self.log = Log(self.model_name, self.model_name + '_' + current_time)
         
@@ -23,6 +24,8 @@ class GraphBaseModel:
 
   def validate(self):
     pass
+
+
 
   def test(self):
     pass
@@ -37,21 +40,47 @@ class GraphBaseModel:
       # 日志文件中记录，控制台显示
       print('### Model Configuration ###')
       self.log.debug('### Model Configuration ###')     
-      for k, v in self.model_config.config.items():
+      for k, v in self.config.config.items():
           print(f'{k}={v}')
           self.log.debug(f'{k}={v}') 
           
-  def run(self, load_model=False):
+  def connect_mongo(self):
+        db = self.config['db']
+        uri = self.config['uri']
+        mongo_client = MyMongoLoader(uri,db)
+        self.issue_assign_collection = mongo_client.db['issue_assign']
+
+  def load_data(self):
+      self.data,self.user_mapping,self.issue_mapping = dataset_to_graph(self.config['dataset_name'])
+      self.num_users = self.data['user'].num_nodes
+      self.num_issues = self.data['issue'].num_nodes
+      train_data, val_data = split_dataset(self.data)
+      self.train_loader,self.val_loader,self.test_loader = dataset_to_batch(self.data,train_data,val_data,self.config['batch_size'])
+
+
+  def run(self, load_model=False,test_model=False):
     self.log.info('Initializing Model...')
-    self.initializing_log()  
+    self.initializing_log()
+
     if load_model:
-        self.log.info('Loading Model...')
-        self.load_model()
+            self.log.info('Loading Model...')
+            self.load_model()
+
+    self.log.info(f"Loading {self.config['dataset_name']} Data...")
+    self.load_data()
+
     self.log.info('Training Model...')
     self.train()
+
     self.log.info('Validating Model...')
     self.validate()
-    self.log.info('Testing Model...')
-    self.test()
+
+    test_model = input('Do you want to test model?:')
+    if test_model.lower() == "test":
+        self.log.info('Testing Model...')
+        self.log.info('Connecting MongoDB...')
+        self.connect_mongo()
+        self.test()
+
     self.log.info('Saving Model...')
     self.save_model()
