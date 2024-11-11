@@ -1,6 +1,7 @@
 from torch_geometric.transforms import RandomLinkSplit
 from torch_geometric.loader import LinkNeighborLoader
-
+from torch_geometric.loader import NeighborLoader
+import torch
 # 将数据划分为训练集、验证集和测试集
 # 使用 RandomLinkSplit 划分 'resolve' 边
 def split_dataset(data):
@@ -16,7 +17,7 @@ def split_dataset(data):
     train_data, val_data, _ = dataset_split(data)
     return train_data, val_data
 
-def dataset_to_batch(train_data,val_data,batch_size):
+def dataset_to_batch(data,train_data,val_data,batch_size):
       # 创建数据加载器
     num_neighbors=[10, 10] # 每层采样的邻居数，可以根据需要调整
     print("train_loader ---------------------------------")
@@ -41,7 +42,7 @@ def dataset_to_batch(train_data,val_data,batch_size):
         batch_size=batch_size,
         shuffle=False
     )
-    # print("test_loader ---------------------------------")
+    print("test_loader ---------------------------------")
     # self.test_loader = LinkNeighborLoader(
     # self.test_data,
     # num_neighbors=num_neighbors,
@@ -52,7 +53,17 @@ def dataset_to_batch(train_data,val_data,batch_size):
     # batch_size=batch_size,
     # shuffle=False
     # ) 
-    return train_loader,val_loader
+    
+    # 获取 open_issues 的索引
+    open_issue_indices = torch.nonzero(data['issue'].is_open_issue).squeeze()
+    test_loader = NeighborLoader(
+        data,
+        num_neighbors=[0], # 关注最新的open_issue 不考虑邻居
+        input_nodes=('issue', open_issue_indices), # 每次从data的open_issue_indices中选取batch_size个节点
+        batch_size=data['user', 'open', 'issue'].edge_index.size(1), # 所有open_issue的数量
+        shuffle=False
+    )
+    return train_loader,val_loader,test_loader
   
 
 
