@@ -1,16 +1,15 @@
 class Data:
-    def __init__(self, config, train, valid, test):
+    def __init__(self, config, train_data, test_data):
         self.config = config
-        self.train_data = train
-        self.valid_data = valid
-        self.test_data = test
+        self.train_data = train_data
+        self.test_data = test_data
 
 class Repo:
-    def __init__(self) -> None:
+    def __init__(self,owner,name,topics,language) -> None:
         pass
 
 class Issue:
-    def __init__(self) -> None:
+    def __init__(self,owner,name,number,user,state,created_time,closed_time,labels,title,body) -> None:
         pass
 
 class PR:
