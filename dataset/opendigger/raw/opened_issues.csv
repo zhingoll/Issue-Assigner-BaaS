@@ -1,0 +1,351 @@
+user,number,title,body
+xiaoya-yaya,572,[Metrics] Common Metrics - Burstiness,"**Description**:
+- Short timeframes of intense activity, followed by a corresponding return to a typical pattern of activity, observed in a project.
+- Burstiness is a way of understanding the cycle of activity in existing metrics, like issues, merge requests, mailing lists, commits, or comments.
+
+**Filters**
+- Stars
+- Forks
+- Issues or bug reports
+- Labels
+- Downloads
+- Release Tags
+- Change Requests
+- Documentation additions or revisions
+- New Repositories
+- Feature Requests
+
+**Instances of Implementation** 
+![image](https://user-images.githubusercontent.com/56542972/120341442-73def880-c329-11eb-9de3-33670b92878a.png)
+![image](https://user-images.githubusercontent.com/56542972/120341467-79d4d980-c329-11eb-9f03-896c64a0a532.png)
+
+
+
+**Resource**
+- CHAOSS: Common Metrics -> When
+- https://chaoss.community/metric-burstiness/
+"
+will-ww,767,"[Proposal] Open Source Community Management Metrics, Indicators, and Dashboards Handbook","I propose to draft a handbook about open source metrology with metrics, indicators, and dashboards tools. Here:
+- metrics: 度量元
+- indicator：指标
+- dashboards：基于场景的数据仪表盘
+
+We can carry out a senario driven methodology to desigh the big picture with a framwork.
+
+**Goal**: the goal of the open source community management is to drive the community into a health and sustainable path, which can continuously create value.
+
+The whole community management framework can be describe below:
+
+![3cd98cd5870ec875a3b525e19c9a185](https://user-images.githubusercontent.com/15010826/157574334-f488feb0-42e5-4d83-acd4-cc96865bc989.png)
+
+ "
+will-ww,782,[idea] Use notebook as a teaching tool in our open source course,"As the notebook tool become stable and the required data available, we can use them as the teaching tool in your courses not only for gradate students but also undergraduates.
+
+Do you have any suggestions, please let me know.
+
+**Course**: 
+- Undergraduste: https://github.com/TieWay59/22-Spring-OSDD
+- Graduate: https://github.com/X-lab2017/OSSDevGov2021
+
+**Notebook**:
+- [Handbook](https://github.com/X-lab2017/open-digger/blob/master/notebook/handbook_zh.ipynb)
+- [Case: Chinese open source annual report](https://github.com/X-lab2017/open-digger/blob/master/notebook/Chinese_open_source_annual_report.ipynb)
+- [Case: Hacking force](https://github.com/X-lab2017/open-digger/blob/master/notebook/hacking_force.ipynb)
+
+I will also want to use these tools to design courses for enterprises with these reqirements.
+"
+frank-zsy,864,[Labeled data] Need to add X-lab members into OpenDigger,"For more convenient management in X-lab, we also need to add X-lab members labeled data into OpenDigger to better analysis in the future. Please feel free to add your name and account in this issue."
+frank-zsy,1183,[Doc] Add more website docs for implemented metrics,"### Description
+
+As xiaoya opened the issue #1180 , and I add an example [page](http://www.x-lab.info/open-digger/#/metrics/openrank) in OpenDigger website for OpenRank index.
+
+We can add more docs about the metrics and indices we implemented in OpenDigger. The page content should contain:
+
+- The badges about the type( Metric, Index or Network), from (X-lab, CHAOSS), for ( Repo, Developer)
+- The definition section for description
+- The code section to provide links
+- [Optional]The parameters section to show how the parameters are set for the exported data
+- CodePen demo section to provide a playground to show how to consume the data
+
+All the CodePen demos are in the README file. We can embed them in the page directly with editable mode enabled."
+tyn1998,1208,[Cron] could you generate data for OpenGalaxy?,"### Description
+
+Reference: https://github.com/X-lab2017/open-galaxy/issues/34
+
+Hi guys, may I request for a cron task generating data for [OpenGalaxy](https://github.com/X-lab2017/open-galaxy)? If you can help, please describe how you will have filtered nodes and links to decrease the size of the graph data when the PR is created.
+
+### Cron Expression
+
+every month"
+frank-zsy,1209,feat: add export task for OpenGalaxy with ngraph,"close #1208 
+
+This PR contains a new task to export OpenGalaxy data by month from Neo4j database.
+
+The task process should be able to:
+
+- [x] Export whole GitHub user-repo activity network data by month.
+- [x] Export data with format that can be used be OpenGalaxy now.
+- [x] Support continuous 3d layout in timeline.
+- [x] Export OpenDigger repo label data at same time."
+Zzzzzhuzhiwei,1238,"OpenDigger Biweekly Meetings, 2023","# 🌿 OpenDigger Biweekly Meetings, 2022-2023 Spring Term
+- 🕣Time: 12:00~12:30, Wednesday of every two weeks
+- 📞Tencent Meeting：755-1645-1474（[link](https://meeting.tencent.com/dm/2p9cBy32diTG)）
+#
+| Week📆 | Date🕣 | Host💂‍♂️ | Core Content🔑 | Discussion🔗 | Video🎥 |
+| --- | --- | --- | --- | --- | --- |
+|  02   | 03-08   | @xgdyp    | The development planning of OpenDigger  |    |    |
+|  04   | 03-22   | @xgdyp    |  An introduction to the process of OpenSODA   |  #1237   |    |
+|  06   | 04-05   | @xgdyp    | The process of the OpenSODA Challenge  | #1247    |    |
+|  08  | 04-19   | @xgdyp    | The idea of the OSPP 2023  | #1252    |    |
+|  10  | 05-03   | @Zzzzzhuzhiwei      | The projects of the OSPP 2023  | #1277     |    |
+|  12  | 05-17   | @Zzzzzhuzhiwei      | The overview of two weeks  | #1293     |     |
+|  14  | 05-31   | @Zzzzzhuzhiwei      | The overview of two weeks  | #1304      |    |
+|  16  | 06-14   | @Zzzzzhuzhiwei      | The overview of two weeks  | #1317      |    |
+|  18 | 06-28   | @Zzzzzhuzhiwei      | The overview of two weeks  | #1326      |    |
+|  20 | 07-12   | @Zzzzzhuzhiwei      | The overview of two weeks, OSPP and China Open Source report 2023 | #1335      |    |
+|  22 | 07-26   | @Zzzzzhuzhiwei      | The overview of two weeks ,OSPP and China Open Source report 2023 | #1348      |    |
+|    | 08-09   | @Zzzzzhuzhiwei      | The overview of two weeks ,OSPP and China Open Source report 2023 | #1384      | [link](https://meeting.tencent.com/v2/cloud-record/share?id=ff2473cd-290f-44e8-a953-c05182c98731&from=3)  |
+|    | 09-06   | @Zzzzzhuzhiwei      | The overview of two weeks ,OSPP and China Open Source report 2023 | #1384      | [link](https://meeting.tencent.com/v2/cloud-record/share?id=b5372c23-556e-400f-be50-94fcc4196280&from=3)  |
+|  02 | 09-20   | @Zzzzzhuzhiwei      | The overview of two weeks ,OSPP and China Open Source report 2023 | #1385      |  [link](https://meeting.tencent.com/v2/cloud-record/share?id=dbf56be8-9782-4233-86db-711ccc5dafdb&from=3)  |
+|  04 | 10-04   | @Zzzzzhuzhiwei      | The overview of two weeks ,OSPP and China Open Source report 2023 | #1396      |   |
+|  06 | 10-18   | @Zzzzzhuzhiwei      | The overview of two weeks and China Open Source report 2023 | #1411      |   |
+|  08 | 11-01   | @Zzzzzhuzhiwei      | The overview of two weeks and China Open Source report 2023 | #1420      |   |
+|  10 | 11-15   | @Zzzzzhuzhiwei      | The overview of two weeks  | #1428      |   |
+|  12 | 11-29   | @Zzzzzhuzhiwei      | The overview of two weeks  | #1435      |   |
+|  14 | 12-13   | @Zzzzzhuzhiwei      | The overview of two weeks  | #1444      |   |
+|  16 | 12-27   | @Zzzzzhuzhiwei      | The overview of two weeks  | #1456      |   |"
+bifenglin,1242,feat: add issue comment TFIDF similarity metrics and issue comment Ja…,"This PR adds the metric about actors' comment TFIDF similarity and actors' Jaccard similarity.
+"
+will-ww,1263,[Feature] Tools like 'Star History' is interesting,"### Description
+
+When more and more community use OpenDigger metrics to how the development of the community. For example, see below:
+
+![652949fb310fd85be0f9d63c4c00811](https://user-images.githubusercontent.com/15010826/233823209-7f3bf526-b161-4ef3-b979-d5c28b5fb4b8.jpg)
+
+ I think we can provide more convenient way to help developers. For example, the project of [Star History](https://github.com/star-history/star-history),
+
+![image](https://user-images.githubusercontent.com/15010826/233823301-c4092e63-e526-4847-871b-4d3a55fba566.png)
+
+This kind of tool is so funny and help to propagate~
+
+https://star-history.com/#X-lab2017/open-digger&Date"
+tyn1998,1306,[Data Export] shorten the oss uploading time in the beginning of every month ,"### Description
+
+Hi community,
+
+Is it possible to shorten the oss uploading time in the beggining of every month? Or could you choose a fixed day from a month and anounce it as a due date before which all data exporting tasks are completed?
+
+This is so important for downstream apps who consume OpenDigger's valuable data.
+
+<img width=""1183"" alt=""image"" src=""https://github.com/X-lab2017/open-digger/assets/32434520/b5dff635-c5ab-4ad5-8658-b165c444f82d"">
+
+<img width=""431"" alt=""image"" src=""https://github.com/X-lab2017/open-digger/assets/32434520/eef3ee96-645c-49c0-92b4-c4b38d204612"">
+"
+frank-zsy,1387,[NOTICE] For any repo requests refined community OpenRank.,"### Description
+
+OpenDigger right now provides community OpenRank results for several repos like X-lab projects, Sealos and 20 projects under Alibaba contribution leaderboard.
+
+In the future, any repo could request the refined community OpenRank, where refined means reactions data which is not in the GitHub log data will also be collected to correct the result.
+
+The only way to get refined community OpenRank is installing [open-digger-bot](https://github.com/apps/open-digger-bot) to the repo. After the installation, backend data service will collect all the issues/pulls' reactions for the repo and store into the graph database for further calculation.
+
+Additionally, repos not installing open-digger-bot will also be included in community OpenRank calculation without reactions correction which means we can get all the community OpenRank results for all the repos on GitHub."
+stevending1st,1431,[Feature] OpenRank algorithm SDK,"### Description
+
+We now like the openRank algorithm very much and hope to use the openRank algorithm to implement an integration system: [KToken](https://github.com/kaiyuanshe/KToken). 
+
+I don't know whether openRank provides relevant SDK now, so it is convenient to calculate the relevant score."
+frank-zsy,1465,[Feature] We need to extract more `Project` type labels.,"### Description
+
+As we included Gitee data into OpenDigger, some multiple repos project are included like openHarmony, openEuler, anolis and etc. So right now if we start to ranking projects in different ranking list, we need to use `project` level data rather than `repo` level data since one community may contains lots of repos.
+
+So we can extract commonly seen open source communities into project level label so we can use project to group the result."
+birdflyi,1496,feat: How to deal with the repo items without any label inside of index.yml files?,"Agree with the opinion: the index.yml files in labeled_data should only have `labels`. 
+
+Disscusstion Referenced: 
+ - https://github.com/X-lab2017/open-digger/pull/1487#discussion_r1448366736
+ - https://github.com/X-lab2017/open-digger/pull/1487#discussion_r1448368773
+
+---
+              Are all the repos below can not be assigned to any above categories? I think they should be set to above categories since there is an `other` sub field.
+
+I think the best way to do this is that `Application` should only have `labels`, all the orgs or repos should be in sub labels.
+
+_Originally posted by @frank-zsy in https://github.com/X-lab2017/open-digger/pull/1487#discussion_r1448366736_
+            "
+PureNatural,1525,[Label Data] ECNU-OSS101-2024-Spring-Class,"### Label
+
+communities/ecnu-oss101-2024-spring
+
+### Type
+
+oss101 course learners
+
+### Repos/Orgs/Users
+
+- ecnu-oss101-2024-spring
+
+### Other information
+
+_No response_"
+Zzzzzhuzhiwei,1547,OpenDigger Biweekly Meeting: 2024-04-10,"### Description
+
+## Meeting
+
+🕣Time: 12:00~12:30, Wednesday of every two weeks
+📞Tencent Meeting：567-2249-5032([link](https://meeting.tencent.com/dm/jmNIO1H667bc))
+Agenda
+
+## labeled data:
+#1539 #1540 update openatom foudation label
+#1544 Update data for Database technical area
+
+## fix
+#1541 fix wrong name for change name repos
+#1542 fix ci server and docker image url
+#1546 add withBot option to community openrank interface"
+Peng99999,1559,[OSS101] Task1: Add the label data about AIGC,"### Description
+
+AIGC (AI-Generated Content) refers to a new method of content production that utilizes AI technology (generative AI approaches) to create content. 
+
+There is now a label classification system for generative large language models (LLMs), and there is already some label data available. Specific classification systems and data can be found in #1418. 
+
+Recently, many latest generative large language models have emerged. It is now necessary to update and add the label data.
+
+Plase add these data in this repository/labeled_data/technology/ai/genertaive_ai:
+![image](https://github.com/X-lab2017/open-digger/assets/78625977/8771b143-9343-4150-ac22-178036794974)
+
+"
+Peng99999,1560,[OSS101] Task2: Design and implement a new metric,"### Description
+
+The homepage of Opendigger displays existing metrics from X-lab and CHAOSS. 
+You can refer to these(https://github.com/X-lab2017/open-digger) to design and implement a new open source insight metric. 
+
+Please provide complete documentation and code."
+Peng99999,1561,[OSS101] Task3: Interpretation of existing metrics,"### Description
+
+Some of the existing metrics do not have explanatory documentation. The detailed implementation of each metric is also provided in the **code**.
+![image](https://github.com/X-lab2017/open-digger/assets/78625977/e7bc89d2-a10c-4496-9fbe-f3b730e19395)
+
+Some suggestions for this task are as follows:
+1. For example, bus factor provided the explanatory documentation: https://chaoss.community/kb/metric-bus-factor/. You can refer to the above document and write the introduction document.
+2. All metrics have been implemented with the capability for visualization display. You can enhance CodePan to include more interpretative visualizations for the existing demos.
+
+The relevant code, documents and **references** for this task need to be provided in the repository."
+Peng99999,1562,[OSS101] Task4:  Mirror Source Management Tool,"### Description
+
+When deploying OpenDigger using Docker, the installation of some dependencies relies on the usage of the Tsinghua mirror source.  Refer to: open-digger/Dockerfile
+
+Currently, specific versions are specified for installation. However, if the Tsinghua mirror source updates or discontinues services for older versions, installation will fail. 
+
+This task requires implementing an automated tool to identify whether the existing mirror source can successfully install and to promptly replace the mirror source to resolve conflicts between installation packages.
+
+The relevant code and dataset for this task need to be provided in the repository."
+Peng99999,1563,[OSS101] Task5: Automatic label classification task based on machine/deep learning methods.,"### Description
+
+Existing repository label data relies heavily on manual labeling. 
+You can attempt to design or utilize machine learning/deep learning methods to automatically identify and annotate data for any subclass of label data. (Refer to open-digger/labeled_data)
+
+ Simultaneously, the labeled data can be used to fit and validate the designed or utilized methods.
+
+The relevant code and document for this task need to be provided in the repository."
+Peng99999,1564,[OSS101] Task6:  Data Insight Report or Visualization Work,"### Description
+
+The goal of this task is to complete a data insight report or visualization work based on the existing data provided by OpenDigger or data obtained by oneself.
+
+Refer to : 
+
+1. Jupyter: open-digger/notebook/China_open_source_blue_paper_2022.ipynb
+
+2. CodePen: https://codepen.io/frank-zsy/pen/abjMXBV
+
+3. CodePen: https://codepen.io/analyticsforlawyers/pen/oLZyOK
+4. Badge: https://github.com/yoshi389111/github-profile-3d-contrib
+
+The relevant code and Report/Work for this task need to be provided in the repository.
+"
+Peng99999,1565,[OSS101] Task7: Open source domain visualization dashboard,"### Description
+
+The task objective is to create an open source domain visualization dashboard based on the **data provided by OpenDigger** or **obtained independently**. This dashboard will primarily be used to display real-time status, trends, and relationships of large-scale data, enabling users to quickly and accurately understand the overall situation of the data.
+
+In terms of visualization libraries, popular open-source options include D3.js, Echarts, Highcharts, AntV, etc. For frontend frameworks, React, Vue, Angular, and others are highly favored.
+Additionally, there are numerous data visualization and analysis tools available. Open source tools like DataEase, Superset, Metabase, as well as commercial tools like Power BI, FineBI, Tableau, etc., can assist users in analyzing data rapidly and gaining insights into business trends.
+
+Refer to:
+
+1. https://[dataease.nzcer.cn/#/delink?link=VBUnBtSHpoJsJKnGJWsDbhuX7Js9mi2jhQvVt5nqVlyHIyn2uAvAO0h%2BJCR7OiyfoxIqnVG7F7qo8HlMBBWNYw&user=gdj4ml2CihGOrtwIFyMIW%2BKZq1l7bZBb34K%2FTg3uKiph2AvSvsG%2FzjFBZ1TSJRFu1%2B3JYQ%2F4yOmgIasmNbUUgA](https://dataease.nzcer.cn/#/delink?link=VBUnBtSHpoJsJKnGJWsDbhuX7Js9mi2jhQvVt5nqVlyHIyn2uAvAO0h%2BJCR7OiyfoxIqnVG7F7qo8HlMBBWNYw&user=gdj4ml2CihGOrtwIFyMIW%2BKZq1l7bZBb34K%2FTg3uKiph2AvSvsG%2FzjFBZ1TSJRFu1%2B3JYQ%2F4yOmgIasmNbUUgA)
+
+2. https://dataease.nzcer.cn/link.html?link=KcbYHnTCu1UOtKDl6xM4AReMV8OTtVNM2w/Hbv+HKmEE9qvzp9q/FIMrJWr6OREd8D8HQhKDEKKLOABsNjwS8A==&user=tFKg7LbjBr9YjnHFoJ8JqcIxGljN2DDlxW1yJ25LtQ6h0KaUxl0OLCG989V6ED+JWCQME60MXNyI//Em3K2eKA=="
+DaiYoyo2,1581,Dai yoyo2 patch 1,
+DaiYoyo2,1584,【Task 3】 Add some demo written by notebook and interpret some metrics,
+Thrrreeee,1592,Work for [OSS101] Task6: Data Insight Report or Visualization Work,This is our team's work for [OSS101 Task6](https://github.com/X-lab2017/open-digger/issues/1564). Top_100_repos.json is our data from github and analysis_for_TOP100.ipynb is our data insight reprot and visualization work.
+MaYangrui6,1594,【task5】Automatic label classification task based on machine/deep learning methods,
+JiaheZhi,1595,【Task 4】 Mirror Source Management Tool,"We implement a mirror source management tool，in /pycjs/mirrors_manager.py, and we write a simple document(TASK4.md) which explaining how to use this tool. Besides, we modify the dockerfile."
+pry666,1596,add task7 submission,[TASK7] 作业提交  具体信息在task7文件夹中
+Peng99999,1598,OpenDigger Biweekly Meeting: 2024-07-31,"### Description
+
+### Description
+
+### Meeting
+
+🕣Time: 12:30~13:30, Wednesday of every two weeks
+📞Tencent Meeting：786-278-031([link](https://meeting.tencent.com/dm/GjDG8cRbtiQ1))
+
+Agenda
+
+### Opendigger：
+added:
+1. #1597
+
+ OSS101:
+1. #1596
+2. #1595
+3. #1594
+
+### OpendiggerWebsite:
+1.docs: add multiple new metrics (EN + ZH) ([link](https://github.com/X-lab2017/open-digger-website/pull/28))
+2. docs: add some downstream apps in user doc ([link](https://github.com/X-lab2017/open-digger-website/pull/29))"
+Peng99999,1601,OpenDigger Biweekly Meeting: 2024-08-14,"### Description
+
+### Meeting
+
+🕣Time: 12:30~13:30, Wednesday of every two weeks
+📞Tencent Meeting：854-321-906([link](https://meeting.tencent.com/dm/qtILK3B5gpMX))
+
+Agenda
+
+### Opendigger：
+
+1. #1599
+2. #1600 
+
+### Opendigger-website：
+Bug:
+1. Base URL should be modified in the /preview command ([link](https://github.com/X-lab2017/open-digger-website/issues/26))
+2. Fix base url for preview command ([link](https://github.com/X-lab2017/open-digger-website/pull/27))
+
+Added:
+1. docs: add multiple new CHAOSS metrics (EN + ZH) ([link](https://github.com/X-lab2017/open-digger-website/pull/31)):
+
+> Added new CHAOSS metrics (both EN & ZH), for the following :
+> New Contributors
+> Change Request(s) Reviews
+> Change Requests Accepted
+> Change Requests Age
+> Change Requests Open
+> Change Requests Resolution Duration
+> Change Requests Response Time"
+wj23027,1607,lable: add label data of ecnu-oss101-2024-spring, add label data of ecnu-oss101-2024-spring 
+xiaoya-yaya,1608,[Chinese Developer] Add more Chinese developers from Ant Group,"### Users
+
+- zombieJ
+- sorrycc
+- yutingzhao1991
+- jiacai2050
+- xudafeng
+
+### Other Information
+
+
+Also, I think the following users should be removed from the Chinese Developer Lists:
+- docschina: appears to be a bot"
