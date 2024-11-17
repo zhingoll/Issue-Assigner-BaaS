@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List
 from pymongo import MongoClient
 from fastapi.middleware.cors import CORSMiddleware
+import datetime  # 新增
 
 app = FastAPI()
 
@@ -23,6 +24,7 @@ app.add_middleware(
 mongo_client = MongoClient('mongodb://localhost:27017/')
 db = mongo_client['GFI-TEST1']
 issue_assign_collection = db['issue_assign']
+feedback_collection = db['feedback']  # 新增，用于存储反馈数据
 
 # 请求数据模型
 class IssueRequest(BaseModel):
@@ -38,6 +40,14 @@ class IssueAssignResponse(BaseModel):
     probability: List[float]
     last_updated: str
     assignee: List[str]
+
+# 新增的反馈请求数据模型
+class FeedbackRequest(BaseModel):
+    user: str
+    feedback: str  # 'thumbs_up' 或 'thumbs_down'
+    owner: str
+    name: str
+    number: int
 
 @app.post("/get_issue_resolvers", response_model=IssueAssignResponse)
 async def get_issue_resolvers(request: IssueRequest):
@@ -57,3 +67,28 @@ async def get_issue_resolvers(request: IssueRequest):
     result['last_updated'] = result['last_updated'].strftime('%Y-%m-%d %H:%M:%S')
 
     return result
+
+@app.post("/submit_feedback")
+async def submit_feedback(request: FeedbackRequest):
+    # 验证反馈值是否有效
+    if request.feedback not in ['thumbs_up', 'thumbs_down']:
+        raise HTTPException(status_code=400, detail="Invalid feedback value.")
+
+    # 构建要插入的数据
+    feedback_data = {
+        "user": request.user,
+        "feedback": request.feedback,
+        "owner": request.owner,
+        "name": request.name,
+        "number": request.number,
+        "timestamp": datetime.datetime.utcnow()
+    }
+
+    # 插入到数据库
+    try:
+        result = feedback_collection.insert_one(feedback_data)
+    except Exception as e:
+        print(f"Error inserting feedback: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save feedback.")
+
+    return {"message": "Feedback submitted successfully."}
