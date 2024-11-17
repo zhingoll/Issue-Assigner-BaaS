@@ -103,7 +103,6 @@
     });
   }
 
-  // 显示可能的解决者
   function showResolvers(assignees, probabilities, owner, repo, issueNumber) {
     console.log('Showing resolvers');
     // 检查是否已存在结果容器，避免重复添加
@@ -111,67 +110,89 @@
     if (container) {
       container.remove();
     }
-
+  
     // 创建结果容器
     container = document.createElement('div');
     container.id = 'issue-resolver-container';
-    container.style.marginTop = '20px';
+    // container.style.marginTop = '5px';
+    container.style.display = 'flex'; // 添加flex布局
+    container.style.alignItems = 'flex-start'; // 顶部对齐
+    // container.style.alignItems = 'center'; // 容器中的项目垂直居中
+    container.style.justifyContent = 'center'; // 水平居中
+  
+    // 创建可能的解决者容器
+    const resolverContainer = document.createElement('div');
+    //resolverContainer.style.marginRight = '20px'; // 与反馈容器保持一定距离
 
     const title = document.createElement('h3');
     title.innerText = '可能的解决者：';
-    container.appendChild(title);
-
+    resolverContainer.appendChild(title);
+  
     const list = document.createElement('ul');
     list.style.listStyleType = 'none';
-    container.appendChild(list);
-
+    resolverContainer.appendChild(list);
+  
     assignees.forEach((assignee, index) => {
       const item = document.createElement('li');
       item.style.marginBottom = '5px';
-
+  
       const link = document.createElement('a');
       link.href = `https://github.com/${assignee}`;
       link.target = '_blank';
       link.innerText = assignee;
-
+  
       const probability = probabilities[index];
-
+  
       const probSpan = document.createElement('span');
       probSpan.innerText = `（概率：${(probability * 100).toFixed(4)}%）`;
       probSpan.style.marginLeft = '10px';
       probSpan.style.color = '#888';
-
+  
       item.appendChild(link);
       item.appendChild(probSpan);
       list.appendChild(item);
     });
-
-    // 添加用户反馈部分
+  
+    // 将可能的解决者容器添加到主容器
+    container.appendChild(resolverContainer);
+  
+    // 创建反馈容器
     const feedbackContainer = document.createElement('div');
-    feedbackContainer.style.marginTop = '20px';
-
-    const feedbackTitle = document.createElement('span');
-    feedbackTitle.innerText = '您对这个推荐结果的看法：';
+    feedbackContainer.style.marginLeft = '5px'; // 与左侧保持一点距离
+    feedbackContainer.style.display = 'flex';
+    feedbackContainer.style.flexDirection = 'column';
+    feedbackContainer.style.alignItems = 'center';
+  
+    const feedbackTitle = document.createElement('h3');
+    feedbackTitle.innerText = '这个结果对您是否有帮助：';
+    feedbackTitle.style.marginBottom = '10px';
     feedbackContainer.appendChild(feedbackTitle);
 
+    const feedbackIcons = document.createElement('div'); // 创建一个新的div用于容纳图标
+    feedbackIcons.style.display = 'flex';
+    feedbackIcons.style.alignItems = 'center';
+    // feedbackIcons.style.justifyContent = 'space-around'; // 图标间有空间
+  
     const thumbsUp = document.createElement('span');
     thumbsUp.innerText = '👍';
     thumbsUp.style.cursor = 'pointer';
-    thumbsUp.style.fontSize = '24px';
-    thumbsUp.style.marginLeft = '10px';
-    thumbsUp.style.verticalAlign = 'middle';
-    feedbackContainer.appendChild(thumbsUp);
+    thumbsUp.style.fontSize = '28px';
+    // thumbsUp.style.marginBottom = '20px';
+    thumbsUp.style.marginRight = '30px'; // 增加间隔至30px
 
+    feedbackIcons.appendChild(thumbsUp);
+  
     const thumbsDown = document.createElement('span');
     thumbsDown.innerText = '👎';
     thumbsDown.style.cursor = 'pointer';
-    thumbsDown.style.fontSize = '24px';
-    thumbsDown.style.marginLeft = '10px';
-    thumbsDown.style.verticalAlign = 'middle';
-    feedbackContainer.appendChild(thumbsDown);
+    thumbsDown.style.fontSize = '28px';
+    feedbackIcons.appendChild(thumbsDown);
 
+    feedbackContainer.appendChild(feedbackIcons); // 将图标容器添加到反馈容器
+  
+    // 将反馈容器添加到主容器
     container.appendChild(feedbackContainer);
-
+  
     // 将结果容器添加到页面上
     const discussionTimeline = document.querySelector('.js-discussion');
     if (discussionTimeline) {
@@ -183,23 +204,23 @@
         header.parentNode.insertBefore(container, header.nextSibling);
       }
     }
-
+  
     // 添加反馈功能
     let feedbackGiven = false;
-
+  
     thumbsUp.addEventListener('click', () => {
       if (feedbackGiven) return;
       feedbackGiven = true;
-
+  
       thumbsUp.style.color = 'green';
       thumbsDown.style.color = '';
-
+  
       const userLogin = getUserLogin();
       if (!userLogin) {
         alert('无法获取您的用户名，请确保您已登录。');
         return;
       }
-
+  
       // 发送反馈到后端
       const feedbackData = {
         user: userLogin,
@@ -208,7 +229,7 @@
         name: repo,
         number: parseInt(issueNumber)
       };
-
+  
       fetch('http://localhost:8000/submit_feedback', {
         method: 'POST',
         headers: {
@@ -230,20 +251,20 @@
         alert('提交反馈时出错。');
       });
     });
-
+  
     thumbsDown.addEventListener('click', () => {
       if (feedbackGiven) return;
       feedbackGiven = true;
-
+  
       thumbsDown.style.color = 'red';
       thumbsUp.style.color = '';
-
+  
       const userLogin = getUserLogin();
       if (!userLogin) {
         alert('无法获取您的用户名，请确保您已登录。');
         return;
       }
-
+  
       // 发送反馈到后端
       const feedbackData = {
         user: userLogin,
@@ -252,7 +273,7 @@
         name: repo,
         number: parseInt(issueNumber)
       };
-
+  
       fetch('http://localhost:8000/submit_feedback', {
         method: 'POST',
         headers: {
@@ -275,7 +296,7 @@
       });
     });
   }
-
+  
   // 等待页面完全加载后执行
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     console.log('Document ready, adding button');
