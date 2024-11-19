@@ -115,18 +115,19 @@ class HGraphSage(GraphBaseModel):
         auc = roc_auc_score(labels.detach().numpy(), preds.detach().numpy())
         self.log.info(f'Validate Loss: {total_loss:.4f}, Accuracy: {accuracy:.4f}, F1: {f1:.4f}, AUC: {auc:.4f}')
 
-    def save_issue_assign(self,owner, name, number, probability, assignees,issue_assign_collection):
+    def save_issue_assign(self, owner, name, number, probability, assignees, issue_assign_collection):
         data = {
             "owner": owner,
             "name": name,
             "number": number,
+            "model":self.model_name,
             "probability": probability,
             "last_updated": datetime.now(timezone.utc),
             "assignee": assignees
         }
         # 更新或插入数据
         issue_assign_collection.update_one(
-            {"owner": owner, "name": name, "number": number},
+            {"owner": owner, "name": name, "number": number,"model":self.model_name},
             {"$set": data},
             upsert=True
         )
