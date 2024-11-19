@@ -38,4 +38,5 @@ if __name__ == '__main__':
     config = load_configuration(model_name)
     load_model = get_load_model_decision()
     model = IssueAssign(config)
-    model.run(load_model)
+    hetero = int(config['graph_type']) == 1  # 1 代表异质图，0 代表同质图
+    model.run(load_model,hetero)
