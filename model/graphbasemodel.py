@@ -50,15 +50,15 @@ class GraphBaseModel:
         mongo_client = MyMongoLoader(uri,db)
         self.issue_assign_collection = mongo_client.db['issue_assign']
 
-  def load_data(self):
-      self.data,self.user_mapping,self.issue_mapping = dataset_to_graph(self.config['dataset_name'])
-      self.num_users = self.data['user'].num_nodes
-      self.num_issues = self.data['issue'].num_nodes
-      train_data, val_data = split_dataset(self.data)
-      self.train_loader,self.val_loader,self.test_loader = dataset_to_batch(self.data,train_data,val_data,self.config['batch_size'])
+  def load_data(self,hetero):
+      self.data,self.user_mapping,self.issue_mapping = dataset_to_graph(self.config['dataset_name'],hetero)
+      print("self.data",self.data) 
+      self.num_users = self.data.num_nodes
+      self.num_issues = self.data.num_nodes
+      self.train_data,self.val_data = split_dataset(self.data,hetero)
+      self.train_loader,self.val_loader,self.test_loader = dataset_to_batch(self.data,self.train_data,self.val_data,self.config['batch_size'],hetero)
 
-
-  def run(self, load_model=False,test_model=False):
+  def run(self, load_model=False,hetero=True,test_model=False):
     self.log.info('Initializing Model...')
     self.initializing_log()
 
@@ -67,7 +67,7 @@ class GraphBaseModel:
             self.load_model()
 
     self.log.info(f"Loading {self.config['dataset_name']} Data...")
-    self.load_data()
+    self.load_data(hetero)
 
     self.log.info('Training Model...')
     self.train()
