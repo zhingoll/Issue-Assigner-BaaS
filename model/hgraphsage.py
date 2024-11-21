@@ -107,30 +107,30 @@ class HGraphSage(GraphBaseModel):
                 preds.append(pred.cpu())
                 labels.append(batch['issue', 'resolved_by', 'user'].edge_label.cpu())
 
-        preds = torch.cat(preds)
+        preds = torch.sigmoid(torch.cat(preds))
         labels = torch.cat(labels)
-        pred_labels = (preds > 0.4).float()
+        pred_labels = ( preds > 0.6).float()
         accuracy = accuracy_score(labels, pred_labels)
         f1 = f1_score(labels, pred_labels)
         auc = roc_auc_score(labels.detach().numpy(), preds.detach().numpy())
         self.log.info(f'Validate Loss: {total_loss:.4f}, Accuracy: {accuracy:.4f}, F1: {f1:.4f}, AUC: {auc:.4f}')
 
-    def save_issue_assign(self, owner, name, number, probability, assignees, issue_assign_collection):
-        data = {
-            "owner": owner,
-            "name": name,
-            "number": number,
-            "model":self.model_name,
-            "probability": probability,
-            "last_updated": datetime.now(timezone.utc),
-            "assignee": assignees
-        }
-        # 更新或插入数据
-        issue_assign_collection.update_one(
-            {"owner": owner, "name": name, "number": number,"model":self.model_name},
-            {"$set": data},
-            upsert=True
-        )
+    # def save_issue_assign(self, owner, name, number, probability, assignees, issue_assign_collection):
+    #     data = {
+    #         "owner": owner,
+    #         "name": name,
+    #         "number": number,
+    #         "model":self.model_name,
+    #         "probability": probability,
+    #         "last_updated": datetime.now(timezone.utc),
+    #         "assignee": assignees
+    #     }
+    #     # 更新或插入数据
+    #     issue_assign_collection.update_one(
+    #         {"owner": owner, "name": name, "number": number,"model":self.model_name},
+    #         {"$set": data},
+    #         upsert=True
+    #     )
 
     # # 对于大规模图，分批次进行user embedding的保存
     # def get_allnode_emb(self):
@@ -219,8 +219,7 @@ class HGraphSage(GraphBaseModel):
                 probabilities = torch.sigmoid(scores)
 
                 # 获取每个 issue 的前 K 个用户
-                top_k = 10
-                top_k_scores, top_k_indices = torch.topk(probabilities, k=top_k, dim=1)  # [batch_size, top_k]
+                top_k_scores, top_k_indices = torch.topk(probabilities, k=self.topk, dim=1)  # [batch_size, top_k]
 
                 # 将用户索引映射为用户名
                 user_indices_np = top_k_indices.cpu().numpy()
