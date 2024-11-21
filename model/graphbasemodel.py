@@ -3,6 +3,8 @@ from time import strftime, localtime, time
 from data.mongo import MyMongoLoader
 from dataset.issueassigndataset import dataset_to_graph
 from data.loader import split_dataset,dataset_to_batch
+from datetime import datetime, timezone
+
 class GraphBaseModel:
   def __init__(self,config) -> None:
     print("GraphBaseModel has been Initialized")
@@ -25,8 +27,6 @@ class GraphBaseModel:
   def validate(self):
     pass
 
-
-
   def test(self):
     pass
 
@@ -35,6 +35,23 @@ class GraphBaseModel:
 
   def load_model(self):
     pass
+
+  def save_issue_assign(self, owner, name, number, probability, assignees, issue_assign_collection):
+        data = {
+            "owner": owner,
+            "name": name,
+            "number": number,
+            "model":self.model_name,
+            "probability": probability,
+            "last_updated": datetime.now(timezone.utc),
+            "assignee": assignees
+        }
+        # 更新或插入数据
+        issue_assign_collection.update_one(
+            {"owner": owner, "name": name, "number": number,"model":self.model_name},
+            {"$set": data},
+            upsert=True
+        )
 
   def initializing_log(self):
       # 日志文件中记录，控制台显示
