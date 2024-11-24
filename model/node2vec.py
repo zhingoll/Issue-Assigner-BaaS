@@ -65,7 +65,7 @@ class Node2VecModel(GraphBaseModel):
         preds = []
         labels = []
         with torch.no_grad():
-            # 使用验证集的正负样本进行评估
+            # Evaluate using positive and negative samples from the validation set
             edge_label_index = self.val_data.edge_label_index
             edge_label = self.val_data.edge_label
 
@@ -91,37 +91,26 @@ class Node2VecModel(GraphBaseModel):
         self.log.info('Testing...')
         self.node2vec.eval()
         with torch.no_grad():
-            # 获取用户嵌入（假设 node_type == 0 表示用户）
+            # Get user embedding (node_date==0)
             user_indices = torch.arange(self.data.num_nodes)[self.data.node_type == 0].to(device)
             user_embs = self.node_embeddings[user_indices]
-            # 创建反向 user 映射
             user_mapping_inv = {idx: user for user, idx in self.user_mapping.items()}
-            # 创建反向 issue 映射
             issue_mapping_inv = {idx: number for number, idx in self.issue_mapping.items()}
 
-            # 处理测试集中的 issue
+            # Handling issues in the test set
             for batch in self.test_loader:
                 batch = batch.to(device)
                 issue_indices = batch.n_id
                 issue_embs = self.node_embeddings[issue_indices]
-
-                # 计算 issue 与所有用户之间的相似度
                 scores = torch.matmul(issue_embs, user_embs.T)  # [num_issues, num_users]
                 probabilities = torch.sigmoid(scores)
-
-                # 获取每个 issue 的前 K 个用户
                 top_k = self.topk
                 top_k_scores, top_k_indices = torch.topk(probabilities, k=top_k, dim=1)
-
-                # 将用户索引映射为用户名
                 user_indices_np = user_indices[top_k_indices].cpu().numpy()
                 user_names_array = np.vectorize(user_mapping_inv.get)(user_indices_np)
-
-                # 获取对应的 issue 编号
                 issue_global_indices = issue_indices.cpu().numpy()
                 issue_numbers = [issue_mapping_inv[idx] for idx in issue_global_indices]
 
-                # 保存预测结果
                 for issue_number, user_names, scores in zip(issue_numbers, user_names_array, top_k_scores.cpu().numpy()):
                     probabilities_list = scores.tolist()
                     user_names_list = user_names.tolist()
@@ -129,20 +118,3 @@ class Node2VecModel(GraphBaseModel):
                         self.owner, self.name, issue_number,
                         probabilities_list, user_names_list, self.issue_assign_collection
                     )
-
-    # def save_issue_assign(self, owner, name, number, probability, assignees, issue_assign_collection):
-    #     data = {
-    #         "owner": owner,
-    #         "name": name,
-    #         "number": number,
-    #         "model":self.model_name,
-    #         "probability": probability,
-    #         "last_updated": datetime.now(timezone.utc),
-    #         "assignee": assignees
-    #     }
-    #     # 更新或插入数据
-    #     issue_assign_collection.update_one(
-    #         {"owner": owner, "name": name, "number": number,"model":self.model_name},
-    #         {"$set": data},
-    #         upsert=True
-    #     )
