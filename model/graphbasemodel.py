@@ -46,7 +46,7 @@ class GraphBaseModel:
             "last_updated": datetime.now(timezone.utc),
             "assignee": assignees
         }
-        # 更新或插入数据
+        # Update or insert data
         issue_assign_collection.update_one(
             {"owner": owner, "name": name, "number": number,"model":self.model_name},
             {"$set": data},
@@ -54,7 +54,7 @@ class GraphBaseModel:
         )
 
   def initializing_log(self):
-      # 日志文件中记录，控制台显示
+      # Recorded in the log file, console displays
       print('### Model Configuration ###')
       self.log.debug('### Model Configuration ###')     
       for k, v in self.config.config.items():
