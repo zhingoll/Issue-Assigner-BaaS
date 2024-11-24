@@ -37,7 +37,7 @@ class HGraphSage(GraphBaseModel):
                 x_dict = batch.x_dict
                 edge_index_dict = batch.edge_index_dict
                 
-                # 构建 edge_weight_dict
+                # Build edge_weight_dict
                 edge_weight_dict = {}
                 for rel in edge_index_dict.keys():
                     if 'edge_weight' in batch[rel]:
@@ -115,28 +115,11 @@ class HGraphSage(GraphBaseModel):
         auc = roc_auc_score(labels.detach().numpy(), preds.detach().numpy())
         self.log.info(f'Validate Loss: {total_loss:.4f}, Accuracy: {accuracy:.4f}, F1: {f1:.4f}, AUC: {auc:.4f}')
 
-    # def save_issue_assign(self, owner, name, number, probability, assignees, issue_assign_collection):
-    #     data = {
-    #         "owner": owner,
-    #         "name": name,
-    #         "number": number,
-    #         "model":self.model_name,
-    #         "probability": probability,
-    #         "last_updated": datetime.now(timezone.utc),
-    #         "assignee": assignees
-    #     }
-    #     # 更新或插入数据
-    #     issue_assign_collection.update_one(
-    #         {"owner": owner, "name": name, "number": number,"model":self.model_name},
-    #         {"$set": data},
-    #         upsert=True
-    #     )
-
-    # # 对于大规模图，分批次进行user embedding的保存
+    # # For large-scale graphs, save user embeddings in batches
     # def get_allnode_emb(self):
     #     self.user_loader = NeighborLoader(
     #                 self.data,
-    #                 num_neighbors=[-1],  # 可以根据需要设置采样的邻居数
+    #                 num_neighbors=[-1], 
     #                 input_nodes=('user', torch.arange(self.data['user'].num_nodes)),
     #                 batch_size=self.batch_size,
     #                 shuffle=False
@@ -156,25 +139,27 @@ class HGraphSage(GraphBaseModel):
     #                 else:
     #                     edge_weight_dict[rel] = None
 
-    #             # 前向传播，计算用户嵌入
     #             out_dict = self.model(x_dict, edge_index_dict, edge_weight_dict)
     #             user_emb = out_dict['user']
 
-    #             # 获取批次内的全局用户节点索引
+    #             # Retrieve the global user node index within the batch
     #             global_user_indices = batch['user'].n_id.cpu()
 
-    #             # 将嵌入和索引保存下来
+    #             # Save embeddings and indexes
     #             user_emb_list.append((global_user_indices, user_emb.cpu()))
         
-    #     # 根据全局用户索引，将嵌入拼接成完整的用户嵌入张量
+    #     # According to the global user index, concatenate the embeddings into a complete user embedding tensor
     #     num_users = self.data['user'].num_nodes
     #     self.user_emb = torch.zeros((num_users, self.out_channels))
     #     for indices, emb in user_emb_list:
     #         self.user_emb[indices] = emb
-    #     print("所有用户的嵌入已计算并保存，形状为：", self.user_emb.shape)
-
-    # 对于中小规模图，一次整张图的前向传播得到user的embedding并保存    
+    #     print("All user embeddings have been computed and saved, shape:", self.user_emb.shape)
+     
     def get_allnode_emb(self):
+        '''
+        For small and medium-sized graphs, a forward propagation of the entire
+        graph yields the embedding of the user and saves it
+        '''
         self.model.eval()
         with torch.no_grad():
             self.data = self.data.to(device)
@@ -188,10 +173,13 @@ class HGraphSage(GraphBaseModel):
                     edge_weight_dict[rel] = None
             out_dict = self.model(x_dict, edge_index_dict, edge_weight_dict)
             self.user_emb = out_dict['user']
-        print("所有用户的嵌入已计算并保存，形状为：", self.user_emb.shape)
+        print("All user embeddings have been computed and saved, shape:", self.user_emb.shape)
 
-    # 对未来做预测，都是全新的issue，没有ground-truth,没有任何交互信息
     def test(self):
+        '''
+        Predicting the future is a completely new issue, 
+        without ground truth or any interactive information
+        '''
         self.get_allnode_emb()
         self.model.eval()
         with torch.no_grad():
@@ -207,34 +195,34 @@ class HGraphSage(GraphBaseModel):
                     else:
                         edge_weight_dict[rel] = None
 
-                # 前向传播
                 out_dict = self.model(x_dict,edge_index_dict,edge_weight_dict)
                 # issue_emb = self.model.issue_mlp(x_dict['issue'])
                 issue_emb = out_dict['issue']  # [batch_size, out_channels]
 
-                # 获取 batch 中的 issue 索引
+                # Retrieve the issue index from the batch
                 # issue_batch = subgraph['issue'].batch  # [batch_size]
-                # 对于每个 issue，计算与所有用户的相似度
+                # For each issue, calculate the similarity with all users
                 scores = torch.matmul(self.user_emb, issue_emb.T).T  # [batch_size, num_users]
                 probabilities = torch.sigmoid(scores)
 
-                # 获取每个 issue 的前 K 个用户
+                # Get the top-K users for each issue
                 top_k_scores, top_k_indices = torch.topk(probabilities, k=self.topk, dim=1)  # [batch_size, top_k]
 
-                # 将用户索引映射为用户名
+                # Map user index to username
                 user_indices_np = top_k_indices.cpu().numpy()
-                # 创建反向user映射
+                # Create reverse user mapping
                 user_mapping_inv = {idx: user for user, idx in self.user_mapping.items()}
-                # 遍历user_indices_np中的每个元素（每个用户索引）,使用user_mapping_inv.get 查询每个索引对应的用户名
+                # Traverse each element (per user index) in user_indices_np and 
+                # use user_mapping_inv.get to query the username corresponding to each index
                 user_names_array = np.vectorize(user_mapping_inv.get)(user_indices_np)
 
-                # 获取对应的 issue 编号
-                issue_global_indices = subgraph['issue'].n_id.cpu().numpy()  # 全局索引
-                # 创建反向issue映射
+                # Obtain the corresponding issue number
+                issue_global_indices = subgraph['issue'].n_id.cpu().numpy()  # Global index
+                # Create reverse issue mapping
                 issue_mapping_inv = {idx: number for number, idx in self.issue_mapping.items()}
                 open_issue_numbers = [issue_mapping_inv[idx] for idx in issue_global_indices]
 
-                # 保存预测结果
+                # Save prediction results
                 for issue_number, user_names, scores in zip(open_issue_numbers, user_names_array, top_k_scores.cpu().numpy()):
                     probabilities_list = scores.tolist()
                     user_names_list = user_names.tolist()
@@ -252,13 +240,13 @@ class HeteroGraphSAGE(nn.Module):
         self.conv1 = HeteroConv({
             ('user', 'participate', 'issue'): GraphConv((-1, -1), hidden_channels),
             ('issue', 'rev_participate', 'user'): GraphConv((-1, -1), hidden_channels),
-            # 可以添加其他关系
+            # Add other relationships as needed
         }, aggr='mean')
         
         self.conv2 = HeteroConv({
             ('user', 'participate', 'issue'): GraphConv(hidden_channels, out_channels),
             ('issue', 'rev_participate', 'user'): GraphConv(hidden_channels, out_channels),
-            # 可以添加其他关系
+            # Add other relationships as needed
         }, aggr='mean')
         
         self.relu = nn.ReLU()
@@ -266,9 +254,9 @@ class HeteroGraphSAGE(nn.Module):
     
     def forward(self, x_dict, edge_index_dict, edge_weight_dict=None):
         x_dict = x_dict.copy() 
-        # 对节点特征进行初步处理
+        # Process node features initially
         x_dict['issue'] = self.issue_mlp(x_dict['issue'])
-        # 然后进行消息传递           
+        # Then perform message passing           
         x_dict = self.conv1(x_dict, edge_index_dict, edge_weight_dict=edge_weight_dict)
         x_dict = {key: self.relu(x) for key, x in x_dict.items()}
         x_dict = {key: self.dropout(x) for key, x in x_dict.items()}
