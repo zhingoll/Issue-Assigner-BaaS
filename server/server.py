@@ -17,19 +17,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# MongoDB 连接
+# MongoDB Connection
 mongo_client = MongoClient('mongodb://localhost:27017/')
 db = mongo_client['GFI-TEST1']
 issue_assign_collection = db['issue_assign']
 feedback_collection = db['feedback']
 
-# 请求数据模型
+# Request data model
 class IssueRequest(BaseModel):
     owner: str
     name: str
     number: int
 
-# 响应数据模型
+# Response Data Model
 class ModelRecommendation(BaseModel):
     model: str
     assignee: List[str]
@@ -49,11 +49,11 @@ class FeedbackRequest(BaseModel):
     owner: str
     name: str
     number: int
-    model: str  # 表示针对哪个模型的反馈
+    model: str  # Feedback on which model
 
 @app.post("/get_issue_resolvers", response_model=IssueAssignResponse)
 async def get_issue_resolvers(request: IssueRequest):
-    # 查询数据库，获取同一 Issue 下的所有模型推荐结果
+    # Query the database to obtain all model recommendation results under the same issue
     results = issue_assign_collection.find({
         "owner": request.owner,
         "name": request.name,
@@ -83,11 +83,11 @@ async def get_issue_resolvers(request: IssueRequest):
 
 @app.post("/submit_feedback")
 async def submit_feedback(request: FeedbackRequest):
-    # 验证反馈值是否有效
+    # Verify if the feedback value is valid
     if request.feedback not in ['thumbs_up', 'thumbs_down']:
         raise HTTPException(status_code=400, detail="Invalid feedback value.")
 
-    # 构建要插入的数据
+    # Build the data to be inserted
     feedback_data = {
         "user": request.user,
         "feedback": request.feedback,
@@ -98,7 +98,7 @@ async def submit_feedback(request: FeedbackRequest):
         "timestamp": datetime.datetime.utcnow()
     }
 
-    # 插入到数据库
+    # Insert into database
     try:
         result = feedback_collection.insert_one(feedback_data)
     except Exception as e:
