@@ -71,7 +71,7 @@ class N2VHGNN(GraphBaseModel):
             labels = []
             for batch in self.train_loader:
                 batch = batch.to(device)
-                batch_node_indices = batch.n_id  # 全局索引
+                batch_node_indices = batch.n_id
                 batch_node_embeddings = self.node_embeddings[batch_node_indices].to(device)
                 batch_hg = eg.Hypergraph.from_feature_kNN(batch_node_embeddings, k=3).to(device)
                 outputs = self.model(batch_node_embeddings, batch_hg)
@@ -135,51 +135,51 @@ class N2VHGNN(GraphBaseModel):
         self.log.info('Testing...')
         self.model.eval()
         with torch.no_grad():
-            # 获取所有节点的嵌入
+            # Get embeddings for all nodes
             node_embeddings = self.node_embeddings.to(device)
 
-            # 构建包含所有节点的超图
+            # Build a hypergraph including all nodes
             hg = eg.Hypergraph.from_feature_kNN(node_embeddings, k=3).to(device)
-            # 获取所有节点的更新嵌入
+            # Get updated embeddings for all nodes
             outputs = self.model(node_embeddings, hg)
 
-            # 获取用户节点和 issue 节点的索引
+            # Get indices for user and issue nodes
             user_indices = torch.arange(self.data.num_nodes)[self.data.node_type == 0].to(device)
             # issue_indices_all = torch.arange(self.data.num_nodes)[self.data.node_type == 1].to(device)
 
-            # 从更新的节点嵌入中提取用户和 issue 节点的嵌入
+            # Extract embeddings for user and issue nodes from the updated node embeddings
             user_embs = outputs[user_indices]
             # issue_embs_all = outputs[issue_indices_all]
 
-            # 创建反向映射
+            # Create reverse mapping
             user_mapping_inv = {idx: user for user, idx in self.user_mapping.items()}
             issue_mapping_inv = {idx: number for number, idx in self.issue_mapping.items()}
 
-            # 处理测试集中的 issue 节点
+            # Process issue nodes in the test set
             for batch in self.test_loader:
                 batch = batch.to(device)
-                issue_indices = batch.n_id  # 测试批次中的 issue 节点索引
+                issue_indices = batch.n_id  # Indexes of issue nodes in the test batch
 
-                # 从更新的节点嵌入中提取对应的 issue 节点嵌入
+                # Extract corresponding issue node embeddings from the updated node embeddings
                 issue_embs = outputs[issue_indices]
 
-                # 计算 issue 与所有用户之间的相似度
+                # Calculate the similarity between issues and all users
                 scores = torch.matmul(issue_embs, user_embs.T)  # [num_issues, num_users]
                 probabilities = torch.sigmoid(scores)
 
-                # 获取每个 issue 的前 K 个用户
+                # Retrieve the top K users for each issue
                 top_k = self.topk
                 top_k_scores, top_k_indices = torch.topk(probabilities, k=top_k, dim=1)
 
-                # 将用户索引映射为用户名
+                # Map user indices to usernames
                 user_indices_np = user_indices[top_k_indices].cpu().numpy()
                 user_names_array = np.vectorize(user_mapping_inv.get)(user_indices_np)
 
-                # 获取对应的 issue 编号
+                # Retrieve corresponding issue numbers
                 issue_global_indices = issue_indices.cpu().numpy()
                 issue_numbers = [issue_mapping_inv[idx] for idx in issue_global_indices]
 
-                # 保存预测结果
+                # Save prediction results
                 for issue_number, user_names, scores in zip(issue_numbers, user_names_array, top_k_scores.cpu().numpy()):
                     probabilities_list = scores.tolist()
                     user_names_list = user_names.tolist()
