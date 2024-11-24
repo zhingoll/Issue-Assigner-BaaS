@@ -2,7 +2,7 @@ from re import split
 
 class FileIO():
     '''
-    主要针对 "userid \t itemid \t rate" 这种类型的数据集
+    Mainly targeting datasets of the type "userid \t itemid \t rate"
     '''
     @staticmethod
     def read_interact_file(file: str):
@@ -21,5 +21,5 @@ class FileIO():
 
     @staticmethod
     def read_user_file(file: str):
-        # 暂时只考虑仅有交互行为的场景
+        # Currently, only scenarios with interactive behavior are being considered
         pass
