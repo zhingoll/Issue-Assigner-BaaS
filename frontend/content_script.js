@@ -1,7 +1,7 @@
 (function() {
   console.log('Content script loaded');
 
-  // 检查当前页面是否是 Issue 页面
+  // Check if the current page is an Issue page
   const isIssuePage = () => {
     console.log('Checking if current page is an issue page');
     return /^\/[^\/]+\/[^\/]+\/issues\/\d+$/.test(window.location.pathname);
@@ -17,7 +17,7 @@
 
   console.log('This is an issue page');
 
-  // 获取用户登录名
+  // Get user login name
   function getUserLogin() {
     const meta = document.querySelector('meta[name="user-login"]');
     if (meta) {
@@ -27,26 +27,25 @@
     }
   }
 
-  // 定义一个函数，用于创建按钮和添加事件监听器
+  // Define a function to create a button and add event listeners
   function addResolverButton() {
     console.log('Adding resolver button');
 
-    // 创建按钮
     const button = document.createElement('button');
-    button.innerText = '查看该 issue 的可能解决者';
+    button.innerText = 'View possible resolvers for this issue';
     button.style.marginLeft = '10px';
     button.style.position = 'relative';
-    button.style.zIndex = '1000'; // 确保在最上面
+    button.style.zIndex = '1000'; 
     button.classList.add('btn', 'btn-sm');
 
-    // 获取页面上的操作栏
+    // Get the action bar on the page
     const actionsBar = document.querySelector('.gh-header-actions');
     if (actionsBar) {
       console.log('Found actions bar');
       actionsBar.appendChild(button);
     } else {
       console.log('Actions bar not found, trying header');
-      // 如果找不到操作栏，可以将按钮添加到标题后面
+      // If action bar is not found, try adding the button next to the header
       const header = document.querySelector('.gh-header-show');
       if (header) {
         header.appendChild(button);
@@ -56,10 +55,10 @@
       }
     }
 
-    // 按钮点击事件
+    // Button click event
     button.addEventListener('click', () => {
       console.log('Button clicked');
-      // 获取仓库 owner、name 和 issue number
+      // Get repository owner, name, and issue number
       const pathParts = location.pathname.split('/');
       const owner = pathParts[1];
       const repo = pathParts[2];
@@ -67,14 +66,14 @@
 
       console.log('Owner:', owner, 'Repo:', repo, 'Issue Number:', issueNumber);
 
-      // 构造请求数据
+      // Construct request data
       const requestData = {
         owner: owner,
         name: repo,
         number: parseInt(issueNumber)
       };
 
-      // 发送请求到后端 API
+      // Send request to backend API
       fetch('http://localhost:8000/get_issue_resolvers', {
         method: 'POST',
         headers: {
@@ -89,34 +88,34 @@
         return response.json();
       })
       .then(data => {
-        // 处理返回的数据，显示在页面上
+        // Process the returned data and display on the page
         if (data && data.recommendations && data.recommendations.length > 0) {
           showResolvers(data.recommendations, owner, repo, issueNumber);
         } else {
-          alert('未找到可能的解决者。');
+          alert('No possible resolvers found.');
         }
       })
       .catch(error => {
         console.error('Error fetching issue resolvers:', error);
-        alert('获取可能的解决者时出错。');
+        alert('Error fetching possible resolvers.');
       });
     });
   }
 
   function showResolvers(recommendations, owner, repo, issueNumber) {
     console.log('Showing resolvers');
-    // 检查是否已存在结果容器，避免重复添加
+    // Check if a result container already exists to avoid duplication
     let container = document.getElementById('issue-resolver-container');
     if (container) {
       container.remove();
     }
 
-    // 创建结果容器
+    // Create result container
     container = document.createElement('div');
     container.id = 'issue-resolver-container';
     container.style.marginTop = '20px';
 
-    // 创建模型选择下拉框
+    // Create model selection dropdown
     const modelSelector = document.createElement('select');
     modelSelector.style.marginBottom = '10px';
     modelSelector.style.padding = '5px';
@@ -130,25 +129,25 @@
 
     container.appendChild(modelSelector);
 
-    // 创建显示区域
+    // Create display area
     const displayArea = document.createElement('div');
     container.appendChild(displayArea);
 
-    // 监听模型选择变化
+    // Listen to model selection changes
     modelSelector.addEventListener('change', () => {
       const selectedIndex = modelSelector.value;
       displayRecommendation(recommendations[selectedIndex], owner, repo, issueNumber);
     });
 
-    // 默认显示第一个模型的推荐结果
+    // Default display the first model's recommendations
     displayRecommendation(recommendations[0], owner, repo, issueNumber);
 
-    // 将结果容器添加到页面上
+    // Add result container to the page
     const discussionTimeline = document.querySelector('.js-discussion');
     if (discussionTimeline) {
       discussionTimeline.parentNode.insertBefore(container, discussionTimeline);
     } else {
-      // 如果找不到合适的位置，可以添加到标题后面
+      // If no suitable place is found, try adding it next to the header
       const header = document.querySelector('.gh-header');
       if (header) {
         header.parentNode.insertBefore(container, header.nextSibling);
@@ -160,20 +159,20 @@
     const displayArea = document.querySelector('#issue-resolver-container > div');
     if (!displayArea) return;
 
-    // 清空显示区域
+    // Clear display area
     displayArea.innerHTML = '';
 
-    // 创建标题和反馈容器
+    // Create title and feedback containers
     const container = document.createElement('div');
     container.style.display = 'flex';
     container.style.alignItems = 'center';
     container.style.justifyContent = 'center';
 
-    // 创建可能的解决者容器
+    // Create possible resolvers container
     const resolverContainer = document.createElement('div');
 
     const title = document.createElement('h3');
-    title.innerText = `模型：${recommendation.model}`;
+    title.innerText = `Model:${recommendation.model}`;
     resolverContainer.appendChild(title);
 
     const list = document.createElement('ul');
@@ -192,7 +191,7 @@
       const probability = recommendation.probability[index];
 
       const probSpan = document.createElement('span');
-      probSpan.innerText = `（概率：${(probability * 100).toFixed(4)}%）`;
+      probSpan.innerText = `(Probability:${(probability * 100).toFixed(4)}%)`;
       probSpan.style.marginLeft = '10px';
       probSpan.style.color = '#888';
 
@@ -201,7 +200,7 @@
       list.appendChild(item);
     });
 
-    // 创建反馈容器
+    // Create feedback container
     const feedbackContainer = document.createElement('div');
     feedbackContainer.style.marginLeft = '20px';
     feedbackContainer.style.display = 'flex';
@@ -209,7 +208,7 @@
     feedbackContainer.style.alignItems = 'center';
 
     const feedbackTitle = document.createElement('h3');
-    feedbackTitle.innerText = '这个结果对您是否有帮助：';
+    feedbackTitle.innerText = 'Was this result helpful to you?';
     feedbackTitle.style.marginBottom = '10px';
     feedbackContainer.appendChild(feedbackTitle);
 
@@ -233,14 +232,14 @@
 
     feedbackContainer.appendChild(feedbackIcons);
 
-    // 将可能的解决者容器和反馈容器添加到主容器
+    // Add possible resolvers container and feedback container to the main container
     container.appendChild(resolverContainer);
     container.appendChild(feedbackContainer);
 
-    // 将主容器添加到显示区域
+    // Add main container to the display area
     displayArea.appendChild(container);
 
-    // 添加反馈功能
+    // Add feedback functionality
     let feedbackGiven = false;
 
     thumbsUp.addEventListener('click', () => {
@@ -252,11 +251,11 @@
 
       const userLogin = getUserLogin();
       if (!userLogin) {
-        alert('无法获取您的用户名，请确保您已登录。');
+        alert('Unable to retrieve your username, please ensure you are logged in.');
         return;
       }
 
-      // 发送反馈到后端
+      // Send feedback to the backend
       const feedbackData = {
         user: userLogin,
         feedback: 'thumbs_up',
@@ -275,16 +274,16 @@
       })
       .then(response => {
         if (!response.ok) {
-          throw new Error('网络响应失败');
+          throw new Error('Network response was not ok');
         }
         return response.json();
       })
       .then(data => {
-        alert('感谢您的反馈！');
+        alert('Thank you for your feedback!');
       })
       .catch(error => {
-        console.error('提交反馈时出错:', error);
-        alert('提交反馈时出错。');
+        console.error('Error submitting feedback:', error);
+        alert('Error submitting feedback.');
       });
     });
 
@@ -297,11 +296,11 @@
 
       const userLogin = getUserLogin();
       if (!userLogin) {
-        alert('无法获取您的用户名，请确保您已登录。');
+        alert('Unable to retrieve your username, please ensure you are logged in.');
         return;
       }
 
-      // 发送反馈到后端
+      // Send feedback to the backend
       const feedbackData = {
         user: userLogin,
         feedback: 'thumbs_down',
@@ -320,21 +319,21 @@
       })
       .then(response => {
         if (!response.ok) {
-          throw new Error('网络响应失败');
+          throw new Error('Network response was not ok');
         }
         return response.json();
       })
       .then(data => {
-        alert('感谢您的反馈！');
+        alert('Thank you for your feedback!');
       })
       .catch(error => {
-        console.error('提交反馈时出错:', error);
-        alert('提交反馈时出错。');
+        console.error('Error submitting feedback:', error);
+        alert('Error submitting feedback.');
       });
     });
   }
 
-  // 等待页面完全加载后执行
+  // Execute after the page is fully loaded
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
     console.log('Document ready, adding button');
     addResolverButton();
