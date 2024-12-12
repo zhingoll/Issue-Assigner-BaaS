@@ -23,7 +23,7 @@ issue_assign_collection = db['issue_assign']
 feedback_collection = db['feedback']
 developer_avg_response = db['developer_metrics']
 
-# 数据模型定义
+# Data Model Definition
 class IssueRequest(BaseModel):
     owner: str
     name: str
@@ -51,7 +51,7 @@ class FeedbackRequest(BaseModel):
 
 @app.post("/get_issue_resolvers", response_model=IssueAssignResponse)
 async def get_issue_resolvers(request: IssueRequest):
-    # 查找该issue对应的推荐结果
+    # Search for the recommended results corresponding to this issue
     results = issue_assign_collection.find({
         "owner": request.owner,
         "name": request.name,
@@ -81,7 +81,7 @@ async def get_issue_resolvers(request: IssueRequest):
 
 @app.post("/submit_feedback")
 async def submit_feedback(request: FeedbackRequest):
-    # 检查feedback值是否合法
+    # Check if the feedback value is valid
     if request.feedback not in ['thumbs_up', 'thumbs_down']:
         raise HTTPException(status_code=400, detail="Invalid feedback value.")
 
@@ -121,7 +121,7 @@ async def get_developer_stats(data: dict):
 
     found_devs = {d['developer']: d for d in docs}
 
-    # 对没有记录的开发者用0填充（不返回avg_response_time）
+    # Fill with 0 for developers without records (do not return avg_response_time)
     for dev in developers:
         if dev not in found_devs:
             found_devs[dev] = {
@@ -131,7 +131,7 @@ async def get_developer_stats(data: dict):
                 "global_openrank": 0
             }
         else:
-            # 移除avg_response_time字段（如果有的话）
+            # Remove the avg_response_time field (if any)
             found_devs[dev].pop("avg_response_time", None)
 
     result = [found_devs[dev] for dev in developers]
