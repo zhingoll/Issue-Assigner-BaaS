@@ -3,21 +3,13 @@
 
   // Check if the current page is an Issue page
   const isIssuePage = () => {
-    console.log('Checking if current page is an issue page');
     return /^\/[^\/]+\/[^\/]+\/issues\/\d+$/.test(window.location.pathname);
   };
 
   console.log('Current pathname:', window.location.pathname);
   console.log('Is issue page:', isIssuePage());
 
-  if (!isIssuePage()) {
-    console.log('Not an issue page');
-    return;
-  }
-
-  console.log('This is an issue page');
-
-  // Get user login name
+  // Get the user login name
   function getUserLogin() {
     const meta = document.querySelector('meta[name="user-login"]');
     if (meta) {
@@ -27,25 +19,32 @@
     }
   }
 
-  // Define a function to create a button and add event listeners
   function addResolverButton() {
+    // First check if the current page is an issue page
+    if (!isIssuePage()) {
+      console.log('Not an issue page');
+      return;
+    }
+
     console.log('Adding resolver button');
 
+    // Avoid adding the button multiple times
+    if (document.getElementById('issue-resolver-button')) return;
+
     const button = document.createElement('button');
+    button.id = 'issue-resolver-button';
     button.innerText = 'View possible resolvers for this issue';
     button.style.marginLeft = '10px';
     button.style.position = 'relative';
     button.style.zIndex = '1000'; 
-    button.classList.add('btn', 'btn-sm');
+    button.classList.add('btn', 'btn-sm', 'btn-primary'); // Using GitHub's btn-primary style
 
-    // Get the action bar on the page
     const actionsBar = document.querySelector('.gh-header-actions');
     if (actionsBar) {
       console.log('Found actions bar');
       actionsBar.appendChild(button);
     } else {
       console.log('Actions bar not found, trying header');
-      // If action bar is not found, try adding the button next to the header
       const header = document.querySelector('.gh-header-show');
       if (header) {
         header.appendChild(button);
@@ -55,10 +54,8 @@
       }
     }
 
-    // Button click event
     button.addEventListener('click', () => {
       console.log('Button clicked');
-      // Get repository owner, name, and issue number
       const pathParts = location.pathname.split('/');
       const owner = pathParts[1];
       const repo = pathParts[2];
@@ -66,14 +63,12 @@
 
       console.log('Owner:', owner, 'Repo:', repo, 'Issue Number:', issueNumber);
 
-      // Construct request data
       const requestData = {
         owner: owner,
         name: repo,
         number: parseInt(issueNumber)
       };
 
-      // Send request to backend API
       fetch('http://localhost:8000/get_issue_resolvers', {
         method: 'POST',
         headers: {
@@ -88,7 +83,6 @@
         return response.json();
       })
       .then(data => {
-        // Process the returned data and display on the page
         if (data && data.recommendations && data.recommendations.length > 0) {
           showResolvers(data.recommendations, owner, repo, issueNumber);
         } else {
@@ -104,21 +98,41 @@
 
   function showResolvers(recommendations, owner, repo, issueNumber) {
     console.log('Showing resolvers');
-    // Check if a result container already exists to avoid duplication
     let container = document.getElementById('issue-resolver-container');
     if (container) {
       container.remove();
     }
 
-    // Create result container
     container = document.createElement('div');
     container.id = 'issue-resolver-container';
     container.style.marginTop = '20px';
+    container.style.padding = '15px';
+    container.style.border = '1px solid #d1d5da';
+    container.style.borderRadius = '6px';
+    container.style.backgroundColor = '#f6f8fa';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'row';
+    container.style.alignItems = 'flex-start';
+    container.style.gap = '20px'; 
 
-    // Create model selection dropdown
+    // Create the left container (model selector and recommendations)
+    const leftContainer = document.createElement('div');
+    leftContainer.style.flex = '0.8'; 
+    leftContainer.style.minWidth = '200px';
+    leftContainer.style.display = 'flex';
+    leftContainer.style.flexDirection = 'column';
+    leftContainer.style.gap = '10px';
+
+    // Model selector label and selector
+    const modelSelectorLabel = document.createElement('label');
+    modelSelectorLabel.innerText = 'Select Model: ';
+    modelSelectorLabel.style.fontWeight = 'bold';
+    modelSelectorLabel.htmlFor = 'model-selector';
+
     const modelSelector = document.createElement('select');
-    modelSelector.style.marginBottom = '10px';
+    modelSelector.id = 'model-selector';
     modelSelector.style.padding = '5px';
+    modelSelector.classList.add('form-control'); // Using GitHub's form-control style
 
     recommendations.forEach((rec, index) => {
       const option = document.createElement('option');
@@ -127,220 +141,243 @@
       modelSelector.appendChild(option);
     });
 
-    container.appendChild(modelSelector);
+    // Add model selector label and selector to left container
+    leftContainer.appendChild(modelSelectorLabel);
+    leftContainer.appendChild(modelSelector);
 
-    // Create display area
-    const displayArea = document.createElement('div');
-    container.appendChild(displayArea);
+    // Recommendations display area
+    const resolverDisplayArea = document.createElement('div');
+    resolverDisplayArea.id = 'resolver-display-area';
+    resolverDisplayArea.style.flex = '1'; 
+    resolverDisplayArea.style.paddingTop = '10px';
+    resolverDisplayArea.style.borderTop = '1px solid #d1d5da';
 
-    // Listen to model selection changes
-    modelSelector.addEventListener('change', () => {
-      const selectedIndex = modelSelector.value;
-      displayRecommendation(recommendations[selectedIndex], owner, repo, issueNumber);
-    });
+    leftContainer.appendChild(resolverDisplayArea);
 
-    // Default display the first model's recommendations
-    displayRecommendation(recommendations[0], owner, repo, issueNumber);
+    container.appendChild(leftContainer);
 
-    // Add result container to the page
+    // Create right container (stacked bar chart)
+    const chartDisplayArea = document.createElement('div');
+    chartDisplayArea.id = 'chart-display-area';
+    chartDisplayArea.style.flex = '1';
+    chartDisplayArea.style.minWidth = '300px';
+    chartDisplayArea.style.boxSizing = 'border-box';
+
+    container.appendChild(chartDisplayArea);
+
+    // Add to page
     const discussionTimeline = document.querySelector('.js-discussion');
     if (discussionTimeline) {
       discussionTimeline.parentNode.insertBefore(container, discussionTimeline);
     } else {
-      // If no suitable place is found, try adding it next to the header
       const header = document.querySelector('.gh-header');
       if (header) {
         header.parentNode.insertBefore(container, header.nextSibling);
       }
     }
+
+    // Event listeners
+    modelSelector.addEventListener('change', () => {
+      const selectedIndex = modelSelector.value;
+      displayRecommendation(recommendations[selectedIndex], owner, repo, issueNumber);
+    });
+
+    // Default display first model's result
+    displayRecommendation(recommendations[0], owner, repo, issueNumber);
   }
 
   function displayRecommendation(recommendation, owner, repo, issueNumber) {
-    const displayArea = document.querySelector('#issue-resolver-container > div');
-    if (!displayArea) return;
+    const resolverDisplayArea = document.getElementById('resolver-display-area');
+    const chartDisplayArea = document.getElementById('chart-display-area');
+    if (!resolverDisplayArea || !chartDisplayArea) return;
 
-    // Clear display area
-    displayArea.innerHTML = '';
+    // Clear previous content
+    resolverDisplayArea.innerHTML = '';
+    chartDisplayArea.innerHTML = '';
 
-    // Create title and feedback containers
-    const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.alignItems = 'center';
-    container.style.justifyContent = 'center';
-
-    // Create possible resolvers container
+    // Create recommendation result list
     const resolverContainer = document.createElement('div');
+    resolverContainer.style.marginBottom = '20px';
 
     const title = document.createElement('h3');
-    title.innerText = `Model:${recommendation.model}`;
+    title.innerText = `Model: ${recommendation.model} recommends to you:`;
+    title.style.marginBottom = '10px';
     resolverContainer.appendChild(title);
 
     const list = document.createElement('ul');
     list.style.listStyleType = 'none';
+    list.style.paddingLeft = '0';
     resolverContainer.appendChild(list);
 
     recommendation.assignee.forEach((assignee, index) => {
       const item = document.createElement('li');
       item.style.marginBottom = '5px';
+      item.style.display = 'flex';
+      item.style.alignItems = 'center';
 
       const link = document.createElement('a');
       link.href = `https://github.com/${assignee}`;
       link.target = '_blank';
       link.innerText = assignee;
+      link.style.fontWeight = '600';
+      link.style.textDecoration = 'none';
+      link.style.color = '#0366d6';
+      link.style.marginRight = '10px';
 
       const probability = recommendation.probability[index];
 
       const probSpan = document.createElement('span');
-      probSpan.innerText = `(Probability:${(probability * 100).toFixed(4)}%)`;
-      probSpan.style.marginLeft = '10px';
-      probSpan.style.color = '#888';
+      probSpan.innerText = `(Probability: ${(probability * 100).toFixed(2)}%)`;
+      probSpan.style.color = '#586069';
+      probSpan.style.fontSize = '14px';
 
       item.appendChild(link);
       item.appendChild(probSpan);
       list.appendChild(item);
     });
 
-    // Create feedback container
-    const feedbackContainer = document.createElement('div');
-    feedbackContainer.style.marginLeft = '20px';
-    feedbackContainer.style.display = 'flex';
-    feedbackContainer.style.flexDirection = 'column';
-    feedbackContainer.style.alignItems = 'center';
+    resolverDisplayArea.appendChild(resolverContainer);
 
-    const feedbackTitle = document.createElement('h3');
-    feedbackTitle.innerText = 'Was this result helpful to you?';
-    feedbackTitle.style.marginBottom = '10px';
-    feedbackContainer.appendChild(feedbackTitle);
-
-    const feedbackIcons = document.createElement('div');
-    feedbackIcons.style.display = 'flex';
-    feedbackIcons.style.alignItems = 'center';
-
-    const thumbsUp = document.createElement('span');
-    thumbsUp.innerText = '👍';
-    thumbsUp.style.cursor = 'pointer';
-    thumbsUp.style.fontSize = '28px';
-    thumbsUp.style.marginRight = '30px';
-
-    feedbackIcons.appendChild(thumbsUp);
-
-    const thumbsDown = document.createElement('span');
-    thumbsDown.innerText = '👎';
-    thumbsDown.style.cursor = 'pointer';
-    thumbsDown.style.fontSize = '28px';
-    feedbackIcons.appendChild(thumbsDown);
-
-    feedbackContainer.appendChild(feedbackIcons);
-
-    // Add possible resolvers container and feedback container to the main container
-    container.appendChild(resolverContainer);
-    container.appendChild(feedbackContainer);
-
-    // Add main container to the display area
-    displayArea.appendChild(container);
-
-    // Add feedback functionality
-    let feedbackGiven = false;
-
-    thumbsUp.addEventListener('click', () => {
-      if (feedbackGiven) return;
-      feedbackGiven = true;
-
-      thumbsUp.style.color = 'green';
-      thumbsDown.style.color = '';
-
-      const userLogin = getUserLogin();
-      if (!userLogin) {
-        alert('Unable to retrieve your username, please ensure you are logged in.');
-        return;
-      }
-
-      // Send feedback to the backend
-      const feedbackData = {
-        user: userLogin,
-        feedback: 'thumbs_up',
+    // Fetch developer statistics and display as a stacked bar chart (only global_openrank, community_openrank, avg_activity)
+    fetch('http://localhost:8000/get_developer_stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         owner: owner,
         name: repo,
-        number: parseInt(issueNumber),
-        model: recommendation.model
-      };
+        developers: recommendation.assignee
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Failed to fetch developer stats');
+      return res.json();
+    })
+    .then(statsData => {
+      const metrics = [
+        {key:'global_openrank', color:'#4CAF50', label:'Global OpenRank'},
+        {key:'community_openrank', color:'#2196F3', label:'Community OpenRank'},
+        {key:'avg_activity', color:'#FF9800', label:'Avg Activity'},
+      ];
 
-      fetch('http://localhost:8000/submit_feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(feedbackData)
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        alert('Thank you for your feedback!');
-      })
-      .catch(error => {
-        console.error('Error submitting feedback:', error);
-        alert('Error submitting feedback.');
+      const chartContainer = document.createElement('div');
+      chartContainer.style.marginTop = '20px';
+      chartContainer.style.width = '100%';
+
+      // Add legend
+      const legendContainer = document.createElement('div');
+      legendContainer.style.display = 'flex';
+      legendContainer.style.flexWrap = 'wrap';
+      legendContainer.style.marginBottom = '10px';
+
+      metrics.forEach(m => {
+        const legendItem = document.createElement('div');
+        legendItem.style.display = 'flex';
+        legendItem.style.alignItems = 'center';
+        legendItem.style.marginRight = '15px';
+
+        const colorBox = document.createElement('div');
+        colorBox.style.width = '15px';
+        colorBox.style.height = '15px';
+        colorBox.style.backgroundColor = m.color;
+        colorBox.style.marginRight = '5px';
+
+        const labelSpan = document.createElement('span');
+        labelSpan.innerText = m.label;
+
+        legendItem.appendChild(colorBox);
+        legendItem.appendChild(labelSpan);
+        legendContainer.appendChild(legendItem);
       });
-    });
+      chartContainer.appendChild(legendContainer);
 
-    thumbsDown.addEventListener('click', () => {
-      if (feedbackGiven) return;
-      feedbackGiven = true;
-
-      thumbsDown.style.color = 'red';
-      thumbsUp.style.color = '';
-
-      const userLogin = getUserLogin();
-      if (!userLogin) {
-        alert('Unable to retrieve your username, please ensure you are logged in.');
-        return;
-      }
-
-      // Send feedback to the backend
-      const feedbackData = {
-        user: userLogin,
-        feedback: 'thumbs_down',
-        owner: owner,
-        name: repo,
-        number: parseInt(issueNumber),
-        model: recommendation.model
-      };
-
-      fetch('http://localhost:8000/submit_feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(feedbackData)
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        alert('Thank you for your feedback!');
-      })
-      .catch(error => {
-        console.error('Error submitting feedback:', error);
-        alert('Error submitting feedback.');
+      // Find the maximum sum to scale bar lengths
+      let maxTotal = 0;
+      const devDataMap = {};
+      recommendation.assignee.forEach(assignee => {
+        const devData = statsData.find(d => d.developer === assignee) || {};
+        const total = metrics.reduce((sum,m) => sum + (devData[m.key] || 0), 0);
+        if (total > maxTotal) maxTotal = total;
+        devDataMap[assignee] = {devData, total};
       });
+
+      const baseWidth = 300;
+
+      recommendation.assignee.forEach(assignee => {
+        const {devData, total} = devDataMap[assignee];
+        const barContainer = document.createElement('div');
+        barContainer.style.display = 'flex';
+        barContainer.style.alignItems = 'center';
+        barContainer.style.marginBottom = '8px';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.innerText = assignee + ': ';
+        nameSpan.style.width = '120px';
+        nameSpan.style.fontWeight = '600';
+        nameSpan.style.color = '#24292e';
+        barContainer.appendChild(nameSpan);
+
+        const barWrapper = document.createElement('div');
+        barWrapper.style.display = 'flex';
+        barWrapper.style.width = '100%';
+        barWrapper.style.height = '25px';
+        barWrapper.style.background = '#e1e4e8';
+        barWrapper.style.position = 'relative';
+        barWrapper.style.borderRadius = '4px';
+        barWrapper.style.overflow = 'hidden';
+
+        metrics.forEach(m => {
+          const val = devData[m.key] || 0;
+          if (val <= 0 || total === 0) {
+            return;
+          }
+          const fraction = val / total;
+          const segWidth = fraction * baseWidth;
+
+          const seg = document.createElement('div');
+          seg.style.width = `${(segWidth / baseWidth) * 100}%`; 
+          seg.style.background = m.color;
+          seg.style.display = 'flex';
+          seg.style.alignItems = 'center';
+          seg.style.justifyContent = 'center';
+          seg.style.color = '#fff';
+          seg.style.fontSize = '12px';
+          seg.style.fontWeight = 'bold';
+          seg.style.boxSizing = 'border-box';
+
+          // If segment width is too small, hide text, only show color, display on hover
+          if ((segWidth / baseWidth) * 100 < 10) { // Hide text when less than 10% width
+            seg.innerText = '';
+          } else {
+            seg.innerText = val.toFixed(2); 
+          }
+
+          // Hover tooltip
+          seg.title = `${m.label}: ${val.toFixed(2)}`;
+
+          barWrapper.appendChild(seg);
+        });
+
+        barContainer.appendChild(barWrapper);
+        chartContainer.appendChild(barContainer);
+      });
+
+      chartDisplayArea.appendChild(chartContainer);
+    })
+    .catch(err => {
+      console.error('Error fetching developer stats:', err);
     });
   }
 
-  // Execute after the page is fully loaded
+  // Run addResolverButton on initial page load and when GitHub uses PJAX navigation (pjax:end event)
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    console.log('Document ready, adding button');
     addResolverButton();
   } else {
-    console.log('Document not ready, adding event listener');
     document.addEventListener('DOMContentLoaded', addResolverButton);
   }
-})();
 
+  // When GitHub uses PJAX to load new pages (including switching to issue pages), the pjax:end event is triggered
+  document.addEventListener('pjax:end', () => {
+    addResolverButton();
+  });
+})();
 
